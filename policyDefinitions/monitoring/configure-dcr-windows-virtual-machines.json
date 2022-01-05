@@ -89,8 +89,9 @@
     "DcrResourceId": {
       "type": "String",
       "metadata": {
-        "displayName": "Data Collection Rule Resource Id",
-        "description": "Resource Id of the Data Collection Rule to be applied on the virtual machines in scope."
+        "displayName": "Data Collection Rule",
+        "description": "The Data Collection Rule to be applied on the virtual machines in scope.",
+		"strongType": "microsoft.insights/dataCollectionRules"
       }
     }
   }
