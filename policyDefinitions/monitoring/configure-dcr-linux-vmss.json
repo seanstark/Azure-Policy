@@ -91,7 +91,7 @@
       "metadata": {
         "displayName": "Data Collection Rule",
         "description": "The Data Collection Rule to be applied on the virtual machines in scope.",
-		"strongType": "microsoft.insights/dataCollectionRules"
+        "strongType": "microsoft.insights/dataCollectionRules"
       }
     }
   }
