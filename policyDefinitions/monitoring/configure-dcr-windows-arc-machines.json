@@ -10,15 +10,7 @@
 		{
           "field": "Microsoft.HybridCompute/machines/osName",
           "equals": "windows"
-        },
-		{
-			"field": "Microsoft.HybridCompute/machines/extensions/type",
-			"equals": "AzureMonitorWindowsAgent"
-		},
-		{
-			"field": "Microsoft.HybridCompute/machines/extensions/provisioningState",
-			"equals": "Succeeded"
-		}
+        }
       ]
     },
     "then": {
