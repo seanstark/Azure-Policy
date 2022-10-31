@@ -1,5 +1,5 @@
 {
-  "mode": "Indexed",
+  "mode": "All",
   "policyRule": {
     "if": {
       "allOf": [
@@ -7,65 +7,175 @@
           "field": "type",
           "equals": "Microsoft.Compute/virtualMachines"
         },
-		{
-          "field": "Microsoft.Compute/virtualMachines/storageProfile.osDisk.osType",
-          "like": "Linux*"
+        {
+          "field": "[concat('tags[',parameters('tagName'),']')]",
+          "exists": "true"
+        },
+        {
+          "field": "[concat('tags[', parameters('tagName'), ']')]",
+          "in": "[parameters('tagValue')]"
         }
       ]
     },
     "then": {
       "effect": "[parameters('effect')]",
       "details": {
-        "type": "Microsoft.Insights/dataCollectionRuleAssociations",
+        "type": "Microsoft.Compute/virtualMachines/extensions",
         "roleDefinitionIds": [
-          "/providers/Microsoft.Authorization/roleDefinitions/749f88d5-cbae-40b8-bcfc-e573ddc772fa",
-          "/providers/Microsoft.Authorization/roleDefinitions/92aaf0da-9dab-42b6-94a3-d43ce8d16293"
+          "/providers/Microsoft.Authorization/roleDefinitions/9980e02c-c2be-4d73-94e8-173b1dc7cf3c",
+          "/providers/Microsoft.Authorization/roleDefinitions/f1a07417-d97a-45cb-824c-7a7467783830"
         ],
         "existenceCondition": {
-          "field": "Microsoft.Insights/dataCollectionRuleAssociations/dataCollectionRuleId",
-          "equals": "[parameters('DcrResourceId')]"
+          "allOf": [
+          {
+              "field": "Microsoft.Insights/dataCollectionRuleAssociations/dataCollectionRuleId",
+              "equals": "[parameters('DcrResourceId')]"
+            },
+            {
+              "field": "Microsoft.Compute/virtualMachines/extensions/type",
+              "equals": "AzureMonitorLinuxAgent"
+            },
+            {
+              "field": "Microsoft.Compute/virtualMachines/extensions/publisher",
+              "equals": "Microsoft.Azure.Monitor"
+            },
+            {
+              "field": "Microsoft.Compute/virtualMachines/extensions/provisioningState",
+              "equals": "Succeeded"
+            }
+          ]
         },
         "deployment": {
           "properties": {
             "mode": "incremental",
             "template": {
-              "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+              "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
               "contentVersion": "1.0.0.0",
               "parameters": {
-                "resourceName": {
+                "vmName": {
                   "type": "string"
                 },
                 "location": {
                   "type": "string"
                 },
-                "DcrResourceId": {
+                "utcValue": {
+                  "type": "string",
+                  "defaultValue": "[utcNow()]"
+                },
+                "dcrResourceId": {
+                  "type": "string"
+                },
+                "scriptContent": {
+                  "type": "string"
+                },
+                "scriptArguments": {
+                  "type": "string"
+                },
+                "userAssignedIdentity": {
+                  "type": "string"
+                },
+                "cleanupPreference": {
                   "type": "string"
                 }
               },
               "variables": {
+                "extensionName": "AzureMonitorLinuxAgent",
+                "extensionPublisher": "Microsoft.Azure.Monitor",
+                "extensionType": "AzureMonitorLinuxAgent",
+                "extensionTypeHandlerVersion": "1.12",
+                "deploymentScriptName": "[concat('deploymentScript-',parameters('VMName'),'-',parameters('utcValue'))]",
                 "associationName": "[concat('assoc-', uniqueString(parameters('DcrResourceId')))]"
               },
               "resources": [
                 {
-                  "name": "[concat(parameters('resourceName'), '/', 'Microsoft.Insights/', variables('associationName'))]",
+                  "name": "[concat(parameters('vmName'), '/', variables('extensionName'))]",
+                  "type": "Microsoft.Compute/virtualMachines/extensions",
+                  "location": "[parameters('location')]",
+                  "apiVersion": "2022-08-01",
+                  "properties": {
+                    "publisher": "[variables('extensionPublisher')]",
+                    "type": "[variables('extensionType')]",
+                    "typeHandlerVersion": "[variables('extensionTypeHandlerVersion')]",
+                    "autoUpgradeMinorVersion": true,
+                    "enableAutomaticUpgrade": true
+                  }
+                },
+                {
+                  "name": "[concat(parameters('vmName'), '/', 'Microsoft.Insights/', variables('associationName'))]",
                   "type": "Microsoft.Compute/virtualMachines/providers/dataCollectionRuleAssociations",
                   "location": "[parameters('location')]",
                   "apiVersion": "2019-11-01-preview",
                   "properties": {
-                    "dataCollectionRuleId": "[parameters('DcrResourceId')]"
+                    "dataCollectionRuleId": "[parameters('dcrResourceId')]"
                   }
+                },
+                {
+                  "type": "Microsoft.Resources/deploymentScripts",
+                  "apiVersion": "2020-10-01",
+                  "name": "[variables('deploymentScriptName')]",
+                  "location": "[parameters('location')]",
+                  "kind": "AzurePowerShell",
+                  "identity": {
+                    "type": "userAssigned",
+                    "userAssignedIdentities": {
+                      "[parameters('userAssignedIdentity')]": {}
+                    }
+                  },
+                  "properties": {
+                    "forceUpdateTag": "1",
+                    "azPowerShellVersion": "8.0",
+                    "environmentVariables": [
+                      {
+                          "name": "subscriptionId",
+                          "value": "[subscription().subscriptionId]"
+                      },
+                      {
+                          "name": "vmName",
+                          "value": "[parameters('VMName')]"
+                      },
+                      {
+                          "name": "resourceGroup",
+                          "value": "[resourceGroup().name]"
+                      }
+                    ],
+                    "scriptContent": "[parameters('scriptContent')]",
+                    "arguments": "[parameters('scriptArguments')]",
+                    "retentionInterval": "P1D",
+                    "cleanupPreference": "[parameters('cleanupPreference')]"
+                  },
+                  "dependsOn": [
+                    "[resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('vmName'), variables('extensionName'))]"
+                  ]
                 }
-              ]
+              ],
+              "outputs": {
+                "result": {
+                    "type": "String",
+                    "value": "[reference(variables('deploymentScriptName')).outputs.text]"
+                }
+            }
             },
             "parameters": {
-              "resourceName": {
+              "vmName": {
                 "value": "[field('name')]"
               },
               "location": {
                 "value": "[field('location')]"
               },
-              "DcrResourceId": {
-                "value": "[parameters('DcrResourceId')]"
+              "dcrResourceId": {
+                "value": "[parameters('dcrResourceId')]"
+              },
+              "scriptContent": {
+                "value": "[parameters('scriptContent')]"
+              },
+              "scriptArguments": {
+                "value": "[parameters('scriptArguments')]"
+              },
+              "userAssignedIdentity": {
+                "value": "[parameters('userAssignedIdentity')]"
+              },
+              "cleanupPreference": {
+                "value": "[parameters('cleanupPreference')]"
               }
             }
           }
@@ -82,17 +192,67 @@
       },
       "allowedValues": [
         "DeployIfNotExists",
+        "AuditIfNotExists",
         "Disabled"
       ],
       "defaultValue": "DeployIfNotExists"
     },
-    "DcrResourceId": {
+    "tagName": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Tag Name",
+        "description": "Name of the tag, such as 'environment'"
+      }
+    },
+    "tagValue": {
+      "type": "Array",
+      "metadata": {
+        "displayName": "Tag Value",
+        "description": "Value of the tag, such as 'production', multiple can be seperated by a comma"
+      }
+    },
+    "dcrResourceId": {
       "type": "String",
       "metadata": {
         "displayName": "Data Collection Rule",
         "description": "The Data Collection Rule to be applied on the virtual machines in scope.",
         "strongType": "microsoft.insights/dataCollectionRules"
       }
+    },
+    "scriptContent": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Script Content",
+        "description": "Specify the inline script content"
+      }
+    },
+    "scriptArguments": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Script Arguments",
+        "description": "Specify the arguments to pass to the script"
+      }
+    },
+    "userAssignedIdentity": {
+      "type": "String",
+      "metadata": {
+        "displayName": "User Assigned Managed Identity",
+        "description": "The User Assigned Managed Identity",
+        "strongType": "Microsoft.ManagedIdentity/userAssignedIdentities"
+      }
+    },
+    "cleanupPreference": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Deployment Script Cleanup Preference",
+        "description": "The clean up preference when the script execution gets in a terminal state"
+      },
+      "allowedValues": [
+        "Always",
+        "OnExpiration",
+        "OnSuccess"
+      ],
+      "defaultValue": "OnSuccess"
     }
   }
 }
