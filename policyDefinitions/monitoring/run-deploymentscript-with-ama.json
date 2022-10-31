@@ -1,0 +1,231 @@
+{
+  "mode": "All",
+  "policyRule": {
+    "if": {
+      "allOf": [
+        {
+          "field": "type",
+          "equals": "Microsoft.Compute/virtualMachines"
+        },
+        {
+          "field": "[concat('tags[',parameters('tagName'),']')]",
+          "exists": "true"
+        },
+        {
+          "field": "[concat('tags[', parameters('tagName'), ']')]",
+          "in": "[parameters('tagValue')]"
+        }
+      ]
+    },
+    "then": {
+      "effect": "[parameters('effect')]",
+      "details": {
+        "type": "Microsoft.Compute/virtualMachines/extensions",
+        "roleDefinitionIds": [
+          "/providers/Microsoft.Authorization/roleDefinitions/9980e02c-c2be-4d73-94e8-173b1dc7cf3c",
+          "/providers/Microsoft.Authorization/roleDefinitions/f1a07417-d97a-45cb-824c-7a7467783830",
+          "/subscriptions/ada06e68-375e-4210-be3a-c6cacebf41c5/providers/Microsoft.Authorization/roleDefinitions/7649a4e4-51c2-4976-9d77-ecb3eda85b8b"
+        ],
+        "existenceCondition": {
+          "allOf": [
+            {
+              "field": "Microsoft.Compute/virtualMachines/extensions/type",
+              "equals": "AzureMonitorLinuxAgent"
+            },
+            {
+              "field": "Microsoft.Compute/virtualMachines/extensions/publisher",
+              "equals": "Microsoft.Azure.Monitor"
+            },
+            {
+              "field": "Microsoft.Compute/virtualMachines/extensions/provisioningState",
+              "equals": "Succeeded"
+            }
+          ]
+        },
+        "deployment": {
+          "properties": {
+            "mode": "incremental",
+            "template": {
+              "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+              "contentVersion": "1.0.0.0",
+              "parameters": {
+                "vmName": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "utcValue": {
+                  "type": "string",
+                  "defaultValue": "[utcNow()]"
+                },
+                "scriptContent": {
+                  "type": "string"
+                },
+                "scriptArguments": {
+                  "type": "string"
+                },
+                "userAssignedIdentity": {
+                  "type": "string"
+                },
+                "cleanupPreference": {
+                  "type": "string"
+                }
+              },
+              "variables": {
+                "extensionName": "AzureMonitorLinuxAgent",
+                "extensionPublisher": "Microsoft.Azure.Monitor",
+                "extensionType": "AzureMonitorLinuxAgent",
+                "extensionTypeHandlerVersion": "1.12",
+                "deploymentScriptName": "[concat('deploymentScript-',parameters('VMName'),'-',parameters('utcValue'))]"
+              },
+              "resources": [
+                {
+                  "name": "[concat(parameters('vmName'), '/', variables('extensionName'))]",
+                  "type": "Microsoft.Compute/virtualMachines/extensions",
+                  "location": "[parameters('location')]",
+                  "apiVersion": "2022-08-01",
+                  "properties": {
+                    "publisher": "[variables('extensionPublisher')]",
+                    "type": "[variables('extensionType')]",
+                    "typeHandlerVersion": "[variables('extensionTypeHandlerVersion')]",
+                    "autoUpgradeMinorVersion": true,
+                    "enableAutomaticUpgrade": true
+                  }
+                },
+                {
+                  "type": "Microsoft.Resources/deploymentScripts",
+                  "apiVersion": "2020-10-01",
+                  "name": "[variables('deploymentScriptName')]",
+                  "location": "[parameters('location')]",
+                  "kind": "AzurePowerShell",
+                  "identity": {
+                    "type": "userAssigned",
+                    "userAssignedIdentities": {
+                      "[parameters('userAssignedIdentity')]": {}
+                    }
+                  },
+                  "properties": {
+                    "forceUpdateTag": "1",
+                    "azPowerShellVersion": "8.0",
+                    "environmentVariables": [
+                      {
+                          "name": "subscriptionId",
+                          "value": "[subscription().subscriptionId]"
+                      },
+                      {
+                          "name": "vmName",
+                          "value": "[parameters('VMName')]"
+                      },
+                      {
+                          "name": "resourceGroup",
+                          "value": "[resourceGroup().name]"
+                      }
+                    ],
+                    "scriptContent": "[parameters('scriptContent')]",
+                    "arguments": "[parameters('scriptArguments')]",
+                    "retentionInterval": "P1D",
+                    "cleanupPreference": "[parameters('cleanupPreference')]"
+                  },
+                  "dependsOn": [
+                    "[resourceId('Microsoft.Compute/virtualMachines/extensions', parameters('vmName'), variables('extensionName'))]"
+                  ]
+                }
+              ],
+              "outputs": {
+                "result": {
+                    "type": "String",
+                    "value": "[reference(variables('deploymentScriptName')).outputs.text]"
+                }
+            }
+            },
+            "parameters": {
+              "vmName": {
+                "value": "[field('name')]"
+              },
+              "location": {
+                "value": "[field('location')]"
+              },
+              "scriptContent": {
+                "value": "[parameters('scriptContent')]"
+              },
+              "scriptArguments": {
+                "value": "[parameters('scriptArguments')]"
+              },
+              "userAssignedIdentity": {
+                "value": "[parameters('userAssignedIdentity')]"
+              },
+              "cleanupPreference": {
+                "value": "[parameters('cleanupPreference')]"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "parameters": {
+    "effect": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Effect",
+        "description": "Enable or disable the execution of the policy."
+      },
+      "allowedValues": [
+        "DeployIfNotExists",
+        "AuditIfNotExists",
+        "Disabled"
+      ],
+      "defaultValue": "DeployIfNotExists"
+    },
+    "tagName": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Tag Name",
+        "description": "Name of the tag, such as 'environment'"
+      }
+    },
+    "tagValue": {
+      "type": "Array",
+      "metadata": {
+        "displayName": "Tag Value",
+        "description": "Value of the tag, such as 'production', multiple can be seperated by a comma"
+      }
+    },
+    "scriptContent": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Script Content",
+        "description": "Specify the inline script content"
+      }
+    },
+    "scriptArguments": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Script Arguments",
+        "description": "Specify the arguments to pass to the script"
+      }
+    },
+    "userAssignedIdentity": {
+      "type": "String",
+      "metadata": {
+        "displayName": "User Assigned Managed Identity",
+        "description": "The User Assigned Managed Identity",
+        "strongType": "Microsoft.ManagedIdentity/userAssignedIdentities"
+      }
+    },
+    "cleanupPreference": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Deployment Script Cleanup Preference",
+        "description": "The clean up preference when the script execution gets in a terminal state"
+      },
+      "allowedValues": [
+        "Always",
+        "OnExpiration",
+        "OnSuccess"
+      ],
+      "defaultValue": "OnSuccess"
+    }
+  }
+}
