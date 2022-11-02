@@ -76,8 +76,7 @@
                 "extensionPublisher": "Microsoft.Azure.Monitor",
                 "extensionType": "AzureMonitorLinuxAgent",
                 "extensionTypeHandlerVersion": "1.12",
-                "deploymentScriptName": "[concat('deploymentScript-',parameters('VMName'),'-',parameters('utcValue'))]",
-                "associationName": "[concat('assoc-', uniqueString(parameters('dcrResourceId')))]"
+                "deploymentScriptName": "[concat('deploymentScript-',parameters('VMName'),'-',parameters('utcValue'))]"
               },
               "resources": [
                 {
