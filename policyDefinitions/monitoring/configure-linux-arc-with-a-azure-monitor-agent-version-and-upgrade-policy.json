@@ -1,0 +1,156 @@
+{
+  "mode": "Indexed",
+  "policyRule": {
+    "if": {
+      "allOf": [
+        {
+          "field": "type",
+          "equals": "Microsoft.HybridCompute/machines"
+        },
+        {
+          "field": "Microsoft.HybridCompute/machines/osName",
+          "equals": "linux"
+        }
+      ]
+    },
+    "then": {
+      "effect": "[parameters('effect')]",
+      "details": {
+        "type": "Microsoft.HybridCompute/machines/extensions",
+        "roleDefinitionIds": [
+          "/providers/Microsoft.Authorization/roleDefinitions/cd570a14-e51a-42ad-bac8-bafd67325302"
+        ],
+        "existenceCondition": {
+          "allOf": [
+            {
+              "field": "Microsoft.HybridCompute/machines/extensions/type",
+              "equals": "AzureMonitorLinuxAgent"
+            },
+            {
+              "field": "Microsoft.HybridCompute/machines/extensions/publisher",
+              "equals": "Microsoft.Azure.Monitor"
+            },
+            {
+              "field": "Microsoft.HybridCompute/machines/extensions/provisioningState",
+              "equals": "Succeeded"
+            }
+          ]
+        },
+        "deployment": {
+          "properties": {
+            "mode": "incremental",
+            "template": {
+              "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+              "contentVersion": "1.0.0.0",
+              "parameters": {
+                "vmName": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "agentVersion": {
+                  "type": "string"
+                },
+                "enableAutomaticUpgrade": {
+                  "type": "string"
+                },
+                "autoUpgradeMinorVersion": {
+                  "type": "string"
+                }
+              },
+              "variables": {
+                "extensionName": "AzureMonitorLinuxAgent",
+                "extensionPublisher": "Microsoft.Azure.Monitor",
+                "extensionType": "AzureMonitorLinuxAgent",
+                "extensionTypeHandlerVersion": "[parameters('agentVersion')]"
+              },
+              "resources": [
+                {
+                  "name": "[concat(parameters('vmName'), '/', variables('extensionName'))]",
+                  "type": "Microsoft.HybridCompute/machines/extensions",
+                  "location": "[parameters('location')]",
+                  "apiVersion": "2019-07-01",
+                  "properties": {
+                    "publisher": "[variables('extensionPublisher')]",
+                    "type": "[variables('extensionType')]",
+                    "typeHandlerVersion": "[variables('extensionTypeHandlerVersion')]",
+                    "autoUpgradeMinorVersion": "[parameters('autoUpgradeMinorVersion')]",
+                    "enableAutomaticUpgrade": "[parameters('enableAutomaticUpgrade')]"
+                  }
+                }
+              ]
+            },
+            "parameters": {
+              "vmName": {
+                "value": "[field('name')]"
+              },
+              "location": {
+                "value": "[field('location')]"
+              },
+              "agentVersion": {
+                "value": "[parameters('agentVersion')]"
+              },
+              "enableAutomaticUpgrade": {
+                "value": "[parameters('enableAutomaticUpgrade')]"
+              },
+              "autoUpgradeMinorVersion": {
+                "value": "[parameters('autoUpgradeMinorVersion')]"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "parameters": {
+    "effect": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Effect",
+        "description": "Enable or disable the execution of the policy."
+      },
+      "allowedValues": [
+        "DeployIfNotExists",
+        "Audit",
+        "Disabled"
+      ],
+      "defaultValue": "DeployIfNotExists"
+    },
+    "agentVersion": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Agent Version",
+        "description": "The major version of the agent you would like to deploy. Get supported versions from az vm extension image list --location <region> --publisher Microsoft.Azure.Monitor --name AzureMonitorLinuxAgent",
+        "portalReview": true
+      },
+      "defaultValue": "1.9"
+    },
+    "enableAutomaticUpgrade": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Enable Agent Automatic Upgrade",
+        "description": "Indicates whether the extension should be automatically upgraded by the platform if there is a newer version of the extension available",
+        "portalReview": true
+      },
+      "allowedValues": [
+        "true",
+        "false"
+      ],
+      "defaultValue": "false"
+    },
+    "autoUpgradeMinorVersion": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Enable Agent Minor Version Automatic Upgrade",
+        "description": "Indicates whether the extension should use a newer minor version if one is available at deployment time. Once deployed, however, the extension will not upgrade minor versions unless redeployed, even with this property set to true",
+        "portalReview": true
+      },
+      "allowedValues": [
+        "true",
+        "false"
+      ],
+      "defaultValue": "false"
+    }
+  }
+}
