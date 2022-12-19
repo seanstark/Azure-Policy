@@ -7,7 +7,7 @@
           "field": "type",
           "equals": "Microsoft.Compute/virtualMachines"
         },
-		{
+	{
           "field": "Microsoft.Compute/virtualMachines/storageProfile.osDisk.osType",
           "equals": "linux"
         }
