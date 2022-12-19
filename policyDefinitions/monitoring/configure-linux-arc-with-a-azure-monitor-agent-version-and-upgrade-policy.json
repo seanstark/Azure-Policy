@@ -70,7 +70,7 @@
                   "name": "[concat(parameters('vmName'), '/', variables('extensionName'))]",
                   "type": "Microsoft.HybridCompute/machines/extensions",
                   "location": "[parameters('location')]",
-                  "apiVersion": "2019-07-01",
+                  "apiVersion": "2022-05-10-preview",
                   "properties": {
                     "publisher": "[variables('extensionPublisher')]",
                     "type": "[variables('extensionType')]",
