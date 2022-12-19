@@ -75,8 +75,8 @@
                     "publisher": "[variables('extensionPublisher')]",
                     "type": "[variables('extensionType')]",
                     "typeHandlerVersion": "[variables('extensionTypeHandlerVersion')]",
-                    "autoUpgradeMinorVersion": "[parameters('autoUpgradeMinorVersion')]",
-                    "enableAutomaticUpgrade": "[parameters('enableAutomaticUpgrade')]"
+                    "autoUpgradeMinorVersion": "[bool(parameters('autoUpgradeMinorVersion'))]",
+                    "enableAutomaticUpgrade": "[bool(parameters('enableAutomaticUpgrade'))]"
                   }
                 }
               ]
