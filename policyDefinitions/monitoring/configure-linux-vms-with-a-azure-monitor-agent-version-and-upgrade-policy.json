@@ -124,7 +124,7 @@
         "description": "The major version of the agent you would like to deploy. Get supported versions from az vm extension image list --location <region> --publisher Microsoft.Azure.Monitor --name AzureMonitorLinuxAgent",
         "portalReview": true
       },
-      "defaultValue": "1.9"
+      "defaultValue": "1.24"
     },
     "enableAutomaticUpgrade": {
       "type": "String",
