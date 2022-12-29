@@ -1,0 +1,48 @@
+{
+  "mode": "All",
+  "policyRule": {
+    "if": {
+      "allOf": [
+        {
+          "field": "type",
+          "equals": "Microsoft.Insights/diagnosticSettings"
+        },
+        {
+          "value": "id",
+          "equals": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Insights/diagnosticSettings/', parameters('profileName'))]"
+        }
+      ]
+    },
+    "then": {
+      "effect": "[parameters('effect')]",
+      "details": {
+        "actionNames": [
+          "delete"
+        ]
+      }
+    }
+  },
+  "parameters": {
+    "effect": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Effect",
+        "description": "Effect if tag does not exist"
+      },
+      "allowedValues": [
+        "audit",
+        "denyAction",
+        "disabled"
+      ],
+      "defaultValue": "audit"
+    },
+    "profileName": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Profile Name",
+        "description": "The Diagnostic setting profile name",
+        "portalReview": true
+      }
+    }
+  }
+}
