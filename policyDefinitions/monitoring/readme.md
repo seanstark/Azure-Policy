@@ -18,4 +18,4 @@ Reference the below table on these custome policies
 | configure-networkwatcher-extension-windows-virtual-machines.json | Deploys the networkwatcher extension for windows vritual machines | windows vritual machines |
 | enable-managed-identity-vms.json | Enables a system managemed identity on virtual and vmss machines | virtual and vmss machines; all operating systems |
 | run-deploymentscript-with-ama.json | Deploys the Linux Azure Monitor Agent to machines with a tag and runs a deployment script after installation | machines with a tag |
-| deny-sub-activity-log-from-deletion.json | Prevents Deletion of a Subscription Activity Log Diagnostic Settings based on name |
+| [WIP] deny-sub-activity-log-from-deletion.json | Prevents Deletion of a Subscription Activity Log Diagnostic Settings based on name |
