@@ -8,6 +8,8 @@ Reference the below table on these custome policies
 | audit-networkwatcher-extension-virtual-machines.json | Audits the existance of the NetworkWatcher extension| Microsoft.Compute/virtualMachines |
 | configure-dcr-linux-arc-machines.json | Assigns a data collection rule to all linux arc machines | linux arc machines |
 | configure-dcr-linux-virtual-machines.json | Assigns a data collection rule to all linux virtual machines | linux machines |
+| configure-dcr-linux-vms-exclude-publisher.json | Assigns a data collection rule to linux virtual machines, with the ability to exclude image publishers | linux machines |
+| configure-dcr-linux-vms-include-publisher.json | Assigns a data collection rule to all linux virtual machines with specific image publishers | linux machines |
 | configure-dcr-linux-vmss.json | Assigns a data collection rule to all linux vmss machines | linux vmss |
 | configure-dcr-windows-arc-machines.json | Assigns a data collection rule to all windows arc machines | windows arc machines |
 | configure-dcr-windows-virtual-machines.json | Assigns a data collection rule to all windows virtual machines  | windows virtual machines |
