@@ -148,7 +148,8 @@
         "displayName": "Configuration File Reference",
         "description": "Optional, Specifies the uri to an azure blob that will replace the default configuration for the package if provided",
         "portalReview": true
-      }
+      },
+      "defaultValue": ""
     }
   }
 }
