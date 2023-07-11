@@ -1,7 +1,7 @@
 # Azure VM Application Policies
 
 ## Overview
-These policies will deploy [Azure VM Applications](https://learn.microsoft.com/azure/virtual-machines/vm-applications?) to Windows and Linux virtual machines + virtual machine scale sets
+These policies will deploy [Azure VM Applications](https://learn.microsoft.com/azure/virtual-machines/vm-applications?) to Windows and Linux virtual machines
 
 ## Deployment Methods
 
