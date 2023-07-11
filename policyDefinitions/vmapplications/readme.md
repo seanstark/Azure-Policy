@@ -3,6 +3,8 @@
 ## Overview
 These policies will deploy [Azure VM Applications](https://learn.microsoft.com/azure/virtual-machines/vm-applications?) to Windows and Linux virtual machines
 
+> It may take 15 - 20 minutes for new virtual machines to deploy the vm application
+
 ## Deployment Methods
 
 The deployment methods are dictated by how you share your Azure Compute Galleries. 
