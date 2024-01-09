@@ -1,0 +1,154 @@
+{
+  "mode": "All",
+  "policyRule": {
+    "if": {
+      "field": "type",
+      "equals": "Microsoft.Resources/subscriptions"
+    },
+    "then": {
+      "effect": "[parameters('effect')]",
+      "details": {
+        "type": "Microsoft.Security/pricings",
+        "name": "Containers",
+        "deploymentScope": "subscription",
+        "existenceScope": "subscription",
+        "roleDefinitionIds": [
+          "/providers/Microsoft.Authorization/roleDefinitions/fb1c8493-542b-48eb-b624-b4c8fea62acd"
+        ],
+        "existenceCondition": {
+          "allOf": [
+            {
+              "field": "Microsoft.Security/pricings/pricingTier",
+              "equals": "Standard"
+            },
+            {
+              "count": {
+                "field": "Microsoft.Security/pricings/extensions[*]",
+                "where": {
+                  "allOf": [
+                    {
+                      "field": "Microsoft.Security/pricings/extensions[*].name",
+                      "equals": "OnUploadMalwareScanning"
+                    },
+                    {
+                      "field": "Microsoft.Security/pricings/extensions[*].isEnabled",
+                      "equals": "[parameters('isAgentlessDiscoveryForKubernetesEnabled')]"
+                    }
+                  ]
+                }
+              },
+              "equals": 1
+            },
+            {
+              "count": {
+                "field": "Microsoft.Security/pricings/extensions[*]",
+                "where": {
+                  "allOf": [
+                    {
+                      "field": "Microsoft.Security/pricings/extensions[*].name",
+                      "equals": "ContainerRegistriesVulnerabilityAssessments"
+                    },
+                    {
+                      "field": "Microsoft.Security/pricings/extensions[*].isEnabled",
+                      "equals": "[parameters('isAgentlessContainerVulnAssessmentEnabled')]"
+                    }
+                  ]
+                }
+              },
+              "equals": 1
+            }
+          ]
+        },
+        "deployment": {
+          "location": "westeurope",
+          "properties": {
+            "mode": "incremental",
+            "parameters": {
+              "isAgentlessDiscoveryForKubernetesEnabled": {
+                "value": "[parameters('isAgentlessDiscoveryForKubernetesEnabled')]"
+              },
+              "isAgentlessContainerVulnAssessmentEnabled": {
+                "value": "[parameters('isAgentlessContainerVulnAssessmentEnabled')]"
+              }
+            },
+            "template": {
+              "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+              "contentVersion": "1.0.0.0",
+              "parameters": {
+                "isAgentlessDiscoveryForKubernetesEnabled": {
+                  "type": "String"
+                },
+                "isAgentlessContainerVulnAssessmentEnabled": {
+                  "type": "String"
+                }
+              },
+              "variables": {},
+              "resources": [
+                {
+                  "type": "Microsoft.Security/pricings",
+                  "apiVersion": "2023-01-01",
+                  "name": "Containers",
+                  "properties": {
+                    "pricingTier": "Standard",
+                    "extensions": [
+                      {
+                        "name": "AgentlessDiscoveryForKubernetes",
+                        "isEnabled": "[parameters('isAgentlessDiscoveryForKubernetesEnabled')]"
+                      },
+                      {
+                        "name": "ContainerRegistriesVulnerabilityAssessments",
+                        "isEnabled": "[parameters('isAgentlessContainerVulnAssessmentEnabled')]"
+                      }
+                    ]
+                  }
+                }
+              ],
+              "outputs": {}
+            }
+          }
+        }
+      }
+    }
+  },
+  "parameters": {
+    "effect": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Effect",
+        "description": "Enable or disable the execution of the policy",
+        "portalReview": true
+      },
+      "allowedValues": [
+        "DeployIfNotExists",
+        "Disabled"
+      ],
+      "defaultValue": "DeployIfNotExists"
+    },
+    "isAgentlessDiscoveryForKubernetesEnabled": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Agentless discovery for Kubernetes",
+        "description": "Enable or disable Agentless discovery for Kubernetes",
+        "portalReview": true
+      },
+      "allowedValues": [
+        "true",
+        "false"
+      ],
+      "defaultValue": "true"
+    },
+    "isAgentlessContainerVulnAssessmentEnabled": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Agentless container vulnerability assessment",
+        "description": "Enable or disable Agentless container vulnerability assessment",
+        "portalReview": true
+      },
+      "allowedValues": [
+        "true",
+        "false"
+      ],
+      "defaultValue": "true"
+    }
+  }
+}
