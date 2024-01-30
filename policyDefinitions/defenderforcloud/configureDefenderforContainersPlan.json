@@ -28,7 +28,7 @@
                   "allOf": [
                     {
                       "field": "Microsoft.Security/pricings/extensions[*].name",
-                      "equals": "OnUploadMalwareScanning"
+                      "equals": "AgentlessDiscoveryForKubernetes"
                     },
                     {
                       "field": "Microsoft.Security/pricings/extensions[*].isEnabled",
