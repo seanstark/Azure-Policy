@@ -13,7 +13,8 @@
         "deploymentScope": "subscription",
         "existenceScope": "subscription",
         "roleDefinitionIds": [
-          "/providers/Microsoft.Authorization/roleDefinitions/fb1c8493-542b-48eb-b624-b4c8fea62acd"
+          "/providers/Microsoft.Authorization/roleDefinitions/fb1c8493-542b-48eb-b624-b4c8fea62acd",
+          "/providers/Microsoft.Authorization/roleDefinitions/18d7d88d-d35e-4fb5-a5c3-7773c20a72d9"
         ],
         "existenceCondition": {
           "allOf": [
@@ -56,6 +57,18 @@
                 }
               },
               "equals": 1
+            },
+            {
+              "field": "Microsoft.Authorization/roleAssignments/roleDefinitionId",
+              "like": "*/d5a2ae44-610b-4500-93be-660a0c5f5ca6"
+            },
+            {
+              "field": "Microsoft.Authorization/roleAssignments/principalId",
+              "equals": "78d717eb-570e-4775-87ee-af64f111d9bd"
+            },
+            {
+              "field": "Microsoft.Authorization/roleAssignments/scope",
+              "equals": "[field('id')]"
             }
           ]
         },
@@ -82,8 +95,19 @@
                   "type": "String"
                 }
               },
-              "variables": {},
+              "variables": {
+                "_d4cRoleGuid": "[guid(deployment().name)]"
+              },
               "resources": [
+                {
+                  "type": "Microsoft.Authorization/roleAssignments",
+                  "apiVersion": "2022-04-01",
+                  "name": "[variables('_d4cRoleGuid')]",
+                  "properties": {
+                    "roleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'd5a2ae44-610b-4500-93be-660a0c5f5ca6')]",
+                    "principalId": "78d717eb-570e-4775-87ee-af64f111d9bd"
+                  }
+                },
                 {
                   "type": "Microsoft.Security/pricings",
                   "apiVersion": "2023-01-01",
@@ -100,7 +124,10 @@
                         "isEnabled": "[parameters('isAgentlessContainerVulnAssessmentEnabled')]"
                       }
                     ]
-                  }
+                  },
+                  "dependsOn": [
+                    "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleAssignments/', variables('_d4cRoleGuid'))]"
+                  ]
                 }
               ],
               "outputs": {}
