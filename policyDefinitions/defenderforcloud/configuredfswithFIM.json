@@ -1,0 +1,212 @@
+{
+    "mode": "All",
+    "parameters": {
+        "effect": {
+            "allowedValues": [
+                "DeployIfNotExists",
+                "Disabled"
+            ],
+            "defaultValue": "DeployIfNotExists",
+            "metadata": {
+                "description": "Enable or disable the execution of the policy",
+                "displayName": "Effect"
+            },
+            "type": "String"
+        },
+        "isAgentlessVmScanningEnabled": {
+            "allowedValues": [
+                "true",
+                "false"
+            ],
+            "defaultValue": "true",
+            "metadata": {
+                "description": "Enable or disable the Agentless VM Scanning add-on feature",
+                "displayName": "Agentless VM Scanning Enabled"
+            },
+            "type": "String"
+        },
+        "isFileIntegrityMonitoringEnabled": {
+            "allowedValues": [
+                "true",
+                "false"
+            ],
+            "defaultValue": "true",
+            "metadata": {
+                "description": "Enable or disable the File integrity monitoring (FIM) feature",
+                "displayName": "File integrity monitoring (FIM)"
+            },
+            "type": "String"
+        },
+        "isMdeDesignatedSubscriptionEnabled": {
+            "allowedValues": [
+                "true",
+                "false"
+            ],
+            "defaultValue": "false",
+            "metadata": {
+                "description": "Enable or disable the MDE Designated Subscription add-on feature",
+                "displayName": "MDE Designated Subscription Enabled"
+            },
+            "type": "String"
+        },
+        "subPlan": {
+            "allowedValues": [
+                "P1",
+                "P2"
+            ],
+            "defaultValue": "P2",
+            "metadata": {
+                "description": "Select a Defender for Servers plan",
+                "displayName": "Defender for Servers plans"
+            },
+            "type": "String"
+        }
+    },
+    "policyRule": {
+        "if": {
+            "equals": "Microsoft.Resources/subscriptions",
+            "field": "type"
+        },
+        "then": {
+            "details": {
+                "deployment": {
+                    "location": "westeurope",
+                    "properties": {
+                        "mode": "incremental",
+                        "parameters": {
+                            "isAgentlessVmScanningEnabled": {
+                                "value": "[parameters('isAgentlessVmScanningEnabled')]"
+                            },
+                            "isFileIntegrityMonitoringEnabled": {
+                                "type": "[parameters('isFileIntegrityMonitoringEnabled')]"
+                            },
+                            "isMdeDesignatedSubscriptionEnabled": {
+                                "value": "[parameters('isMdeDesignatedSubscriptionEnabled')]"
+                            },
+                            "subPlan": {
+                                "value": "[parameters('subPlan')]"
+                            }
+                        },
+                        "template": {
+                            "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                            "contentVersion": "1.0.0.0",
+                            "parameters": {
+                                "isAgentlessVmScanningEnabled": {
+                                    "type": "String"
+                                },
+                                "isFileIntegrityMonitoringEnabled": {
+                                    "type": "String"
+                                },
+                                "isMdeDesignatedSubscriptionEnabled": {
+                                    "type": "String"
+                                },
+                                "subPlan": {
+                                    "type": "String"
+                                }
+                            },
+                            "resources": [
+                                {
+                                    "apiVersion": "2023-01-01",
+                                    "name": "VirtualMachines",
+                                    "properties": {
+                                        "extensions": [
+                                            {
+                                                "isEnabled": "[parameters('isAgentlessVmScanningEnabled')]",
+                                                "name": "AgentlessVmScanning"
+                                            },
+                                            {
+                                                "isEnabled": "[parameters('isMdeDesignatedSubscriptionEnabled')]",
+                                                "name": "MdeDesignatedSubscription"
+                                            },
+                                            {
+                                                "isEnabled": "[parameters('isFileIntegrityMonitoringEnabled')]",
+                                                "name": "FileIntegrityMonitoring"
+                                            }
+                                        ],
+                                        "pricingTier": "Standard",
+                                        "subPlan": "[parameters('subPlan')]"
+                                    },
+                                    "type": "Microsoft.Security/pricings"
+                                }
+                            ]
+                        }
+                    }
+                },
+                "deploymentScope": "subscription",
+                "existenceCondition": {
+                    "allOf": [
+                        {
+                            "equals": "Standard",
+                            "field": "Microsoft.Security/pricings/pricingTier"
+                        },
+                        {
+                            "equals": "[parameters('subPlan')]",
+                            "field": "Microsoft.Security/pricings/subPlan"
+                        },
+                        {
+                            "count": {
+                                "field": "Microsoft.Security/pricings/extensions[*]",
+                                "where": {
+                                    "allOf": [
+                                        {
+                                            "equals": "AgentlessVmScanning",
+                                            "field": "Microsoft.Security/pricings/extensions[*].name"
+                                        },
+                                        {
+                                            "equals": "[if(equals(parameters('subPlan'), 'P2'), parameters('isAgentlessVmScanningEnabled'), 'false')]",
+                                            "field": "Microsoft.Security/pricings/extensions[*].isEnabled"
+                                        }
+                                    ]
+                                }
+                            },
+                            "equals": 1
+                        },
+                        {
+                            "count": {
+                                "field": "Microsoft.Security/pricings/extensions[*]",
+                                "where": {
+                                    "allOf": [
+                                        {
+                                            "equals": "MdeDesignatedSubscription",
+                                            "field": "Microsoft.Security/pricings/extensions[*].name"
+                                        },
+                                        {
+                                            "equals": "[parameters('isMdeDesignatedSubscriptionEnabled')]",
+                                            "field": "Microsoft.Security/pricings/extensions[*].isEnabled"
+                                        }
+                                    ]
+                                }
+                            },
+                            "equals": 1
+                        },
+                        {
+                            "count": {
+                                "field": "Microsoft.Security/pricings/extensions[*]",
+                                "where": {
+                                    "allOf": [
+                                        {
+                                            "equals": "FileIntegrityMonitoring",
+                                            "field": "Microsoft.Security/pricings/extensions[*].name"
+                                        },
+                                        {
+                                            "equals": "[parameters('isFileIntegrityMonitoringEnabled')]",
+                                            "field": "Microsoft.Security/pricings/extensions[*].isEnabled"
+                                        }
+                                    ]
+                                }
+                            },
+                            "equals": 1
+                        }
+                    ]
+                },
+                "existenceScope": "subscription",
+                "name": "VirtualMachines",
+                "roleDefinitionIds": [
+                    "/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635"
+                ],
+                "type": "Microsoft.Security/pricings"
+            },
+            "effect": "[parameters('effect')]"
+        }
+    }
+}
