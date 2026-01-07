@@ -95,6 +95,9 @@
               "isFIMEnabled": {
                 "value": "[parameters('isFIMEnabled')]"
               },
+              "fimWorkspace": {
+                "value": "[parameters('fimWorkspace')]"
+              },
               "isMdeDesignatedSubscriptionEnabled": {
                 "value": "[parameters('isMdeDesignatedSubscriptionEnabled')]"
               }
@@ -112,12 +115,16 @@
                 "isFIMEnabled": {
                   "type": "String"
                 },
+                "fimWorkspace": {
+                  "type": "String"
+                },
                 "isMdeDesignatedSubscriptionEnabled": {
                   "type": "String"
                 }
               },
               "variables": {
-                "fimRules": "['[{\"RuleId\":\"d66afcc0-22ae-4c49-40ee-19249373ad67\",\"RuleName\":\"Recommended to monitor\",\"RuleDescription\":\"Recommended critical entities for monitoring \",\"IsCustomRule\":false,\"ChangeType\":\"CDMR\",\"IsEnabled\":true,\"MonitoredEntities\":{\"WindowsFiles\":[{\"path\":\"\\\\Windows\\\\system.ini\"}],\"LinuxFiles\":[],\"Registries\":[]}}]']"
+                "fimRuleGuid": "[guid(subscription().subscriptionId)]",
+                "fimRules": "[concat('[{\"RuleId\":\"',variables('fimRuleGuid'),'\",\"RuleName\":\"Recommended to monitor\",\"RuleDescription\":\"Recommended critical entities for monitoring \",\"IsCustomRule\":false,\"ChangeType\":\"CDMR\",\"IsEnabled\":true,\"monitoredEntities\":{\"windowsFiles\":[{\"path\":\"\\\\Windows\\\\system.ini\"},{\"path\":\"\\\\Windows\\\\win.ini\"},{\"path\":\"\\\\Windows\\\\regedit.exe\"},{\"path\":\"\\\\Windows\\\\explorer.exe\"},{\"path\":\"\\\\Windows\\\\System32\\\\userinit.exe\"},{\"path\":\"autoexec.bat\"},{\"path\":\"boot.ini\"},{\"path\":\"config.sys\"}],\"linuxFiles\":[{\"path\":\"/bin/login\"},{\"path\":\"/bin/passwd\"},{\"path\":\"/etc/crontab\"},{\"path\":\"/etc/*.conf\"},{\"path\":\"/usr/bin/\"},{\"path\":\"/usr/sbin/\"},{\"path\":\"/bin/\"},{\"path\":\"/sbin/\"},{\"path\":\"/boot/\"},{\"path\":\"/usr/local/bin/\"},{\"path\":\"/usr/local/sbin/\"},{\"path\":\"/opt/bin/\"},{\"path\":\"/opt/sbin/\"},{\"path\":\"/etc/init.d/\"},{\"path\":\"/etc/cron.hourly/\"},{\"path\":\"/etc/cron.daily/\"},{\"path\":\"/etc/cron.weekly/\"},{\"path\":\"/etc/cron.monthly/\"}],\"registries\":[{\"path\":\"hklm\\\\SOFTWARE\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\Windows\\\\loadappinit_dlls\"},{\"path\":\"hklm\\\\SOFTWARE\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\Windows\\\\appinit_dlls\"},{\"path\":\"hklm\\\\SOFTWARE\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\Windows\\\\iconservicelib\"},{\"path\":\"hklm\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\Shell Folders\\\\common startup\"},{\"path\":\"hklm\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\Shell Folders\\\\startup\"},{\"path\":\"hklm\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\User Shell Folders\\\\common startup\"},{\"path\":\"hklm\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\User Shell Folders\\\\startup\"},{\"path\":\"hklm\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run\\\\\"},{\"path\":\"hklm\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\RunOnce\\\\\"},{\"path\":\"hklm\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\RunServicesOnce\\\\\"},{\"path\":\"hklm\\\\SOFTWARE\\\\WOW6432Node\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\Windows\\\\appinit_dlls\"},{\"path\":\"hklm\\\\SOFTWARE\\\\WOW6432Node\\\\Microsoft\\\\Windows NT\\\\CurrentVersion\\\\Windows\\\\loadappinit_dlls\"},{\"path\":\"hklm\\\\SOFTWARE\\\\WOW6432Node\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\Shell Folders\\\\common startup\"},{\"path\":\"hklm\\\\SOFTWARE\\\\WOW6432Node\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\Shell Folders\\\\startup\"},{\"path\":\"hklm\\\\SOFTWARE\\\\WOW6432Node\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\User Shell Folders\\\\common startup\"},{\"path\":\"hklm\\\\SOFTWARE\\\\WOW6432Node\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Explorer\\\\User Shell Folders\\\\startup\"},{\"path\":\"hklm\\\\SOFTWARE\\\\WOW6432Node\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\Run\\\\\"},{\"path\":\"hklm\\\\SOFTWARE\\\\WOW6432Node\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\RunOnce\\\\\"},{\"path\":\"hklm\\\\SOFTWARE\\\\WOW6432Node\\\\Microsoft\\\\Cryptography\\\\OID\\\\\"},{\"path\":\"hklm\\\\SOFTWARE\\\\Microsoft\\\\Cryptography\\\\OID\\\\\"},{\"path\":\"hklm\\\\SECURITY\\\\POLICY\\\\SECRETS\\\\\"}]}}]')]"
               },
               "resources": [
                 {
@@ -140,7 +147,7 @@
                         "name": "FileIntegrityMonitoring",
                         "isEnabled": "[parameters('isFIMEnabled')]",
                         "additionalExtensionProperties": {
-                          "DefinedWorkspaceId": "/subscriptions/9ebcb583-7adb-44ea-b688-06f1de624cc1/resourceGroups/sentinel-prd/providers/Microsoft.OperationalInsights/workspaces/sentinel-prd",
+                          "DefinedWorkspaceId": "[parameters('fimWorkspace')]",
                           "FIMDetectionType": "Both",
                           "Rules": "[variables('fimRules')]"
                         }
@@ -224,6 +231,16 @@
         "false"
       ],
       "defaultValue": "true"
+    },
+    "fimWorkspace": {
+      "type": "String",
+      "metadata": {
+        "displayName": "File integrity monitoring workspace",
+        "description": "File integrity monitoring workspace",
+        "portalReview": true,
+        "strongType": "omsWorkspace"
+      },
+      "defaultValue": ""
     },
     "isMdeDesignatedSubscriptionEnabled": {
       "type": "String",
