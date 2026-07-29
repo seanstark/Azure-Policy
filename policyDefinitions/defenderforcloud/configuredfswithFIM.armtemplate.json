@@ -124,6 +124,70 @@
         "description": "Change types monitored by the default File Integrity Monitoring rule. C = Created, D = Deleted, M = Modified, R = Renamed."
       }
     },
+    "deployCustomFIMRule": {
+      "type": "string",
+      "defaultValue": "false",
+      "allowedValues": [
+        "true",
+        "false"
+      ],
+      "metadata": {
+        "description": "Deploy the additional custom File Integrity Monitoring rule. When false the custom rule is not added to the plan."
+      }
+    },
+    "customFIMRule": {
+      "type": "string",
+      "defaultValue": "false",
+      "allowedValues": [
+        "true",
+        "false"
+      ],
+      "metadata": {
+        "description": "Enable or disable the additional custom File Integrity Monitoring rule."
+      }
+    },
+    "customFIMRuleName": {
+      "type": "string",
+      "defaultValue": "Custom monitoring rule",
+      "metadata": {
+        "description": "Name of the additional custom File Integrity Monitoring rule."
+      }
+    },
+    "customFIMRuleChangeType": {
+      "type": "string",
+      "defaultValue": "CDMR",
+      "allowedValues": [
+        "CDMR",
+        "CDM",
+        "CDR",
+        "CMR",
+        "DMR",
+        "CD",
+        "CM",
+        "CR",
+        "DM",
+        "DR",
+        "MR",
+        "C",
+        "D",
+        "M",
+        "R"
+      ],
+      "metadata": {
+        "description": "Change types monitored by the custom File Integrity Monitoring rule. C = Created, D = Deleted, M = Modified, R = Renamed."
+      }
+    },
+    "customFIMRuleEntities": {
+      "type": "object",
+      "defaultValue": {
+        "windowsFiles": [],
+        "linuxFiles": [],
+        "registries": []
+      },
+      "metadata": {
+        "description": "Entities monitored by the custom File Integrity Monitoring rule: an object with windowsFiles, linuxFiles and registries arrays of { path } objects."
+      }
+    },
     "isMdeDesignatedSubscriptionEnabled": {
       "type": "string",
       "defaultValue": "false",
@@ -219,7 +283,7 @@
           "defaultFIMRule": {
             "type": "String",
             "metadata": {
-              "displayName": "Default FIM Rule",
+              "displayName": "Default FIM Rule Enabled",
               "description": "Enable or disable the default File integrity monitoring rule 'Recommended to monitor' that is deployed with the plan",
               "portalReview": true
             },
@@ -232,7 +296,7 @@
           "fimChangeType": {
             "type": "String",
             "metadata": {
-              "displayName": "FIM Rule Change Types",
+              "displayName": "Default FIM Rule Change Types",
               "description": "Change types monitored by the default File integrity monitoring rule 'Recommended to monitor'. C = Created, D = Deleted, M = Modified, R = Renamed. Letters must be supplied in CDMR order.",
               "portalReview": true
             },
@@ -254,6 +318,80 @@
               "R"
             ],
             "defaultValue": "CDMR"
+          },
+          "deployCustomFIMRule": {
+            "type": "String",
+            "metadata": {
+              "displayName": "Deploy Custom FIM Rule",
+              "description": "Deploy the additional custom File integrity monitoring rule. When set to false the custom rule is not added to the plan and any existing custom rules are removed by remediation",
+              "portalReview": true
+            },
+            "allowedValues": [
+              "true",
+              "false"
+            ],
+            "defaultValue": "false"
+          },
+          "customFIMRule": {
+            "type": "String",
+            "metadata": {
+              "displayName": "Custom FIM Rule Enabled",
+              "description": "Enable or disable the additional custom File integrity monitoring rule that is deployed with the plan",
+              "portalReview": true
+            },
+            "allowedValues": [
+              "true",
+              "false"
+            ],
+            "defaultValue": "false"
+          },
+          "customFIMRuleName": {
+            "type": "String",
+            "metadata": {
+              "displayName": "Custom FIM Rule Name",
+              "description": "Name of the additional custom File integrity monitoring rule",
+              "portalReview": true
+            },
+            "defaultValue": "Custom monitoring rule"
+          },
+          "customFIMRuleChangeType": {
+            "type": "String",
+            "metadata": {
+              "displayName": "Custom FIM Rule Change Types",
+              "description": "Change types monitored by the custom File integrity monitoring rule. C = Created, D = Deleted, M = Modified, R = Renamed. Letters must be supplied in CDMR order.",
+              "portalReview": true
+            },
+            "allowedValues": [
+              "CDMR",
+              "CDM",
+              "CDR",
+              "CMR",
+              "DMR",
+              "CD",
+              "CM",
+              "CR",
+              "DM",
+              "DR",
+              "MR",
+              "C",
+              "D",
+              "M",
+              "R"
+            ],
+            "defaultValue": "CDMR"
+          },
+          "customFIMRuleEntities": {
+            "type": "Object",
+            "metadata": {
+              "displayName": "Custom FIM Rule Monitored Entities",
+              "description": "Entities monitored by the custom File integrity monitoring rule. Supply an object with windowsFiles, linuxFiles and registries arrays, each containing objects of the form { 'path': '<entity path>' }.",
+              "portalReview": true
+            },
+            "defaultValue": {
+              "windowsFiles": [],
+              "linuxFiles": [],
+              "registries": []
+            }
           },
           "isMdeDesignatedSubscriptionEnabled": {
             "type": "String",
@@ -373,11 +511,43 @@
                                   },
                                   {
                                     "value": "[[string(current('Microsoft.Security/pricings/extensions[*].additionalExtensionProperties'))]",
-                                    "contains": "[[concat('IsEnabled\\\":', parameters('defaultFIMRule'))]"
+                                    "contains": "[[concat('ChangeType\\\":\\\"', parameters('fimChangeType'), '\\\",\\\"IsCustomRule\\\":false,\\\"IsEnabled\\\":', parameters('defaultFIMRule'))]"
                                   },
                                   {
-                                    "value": "[[string(current('Microsoft.Security/pricings/extensions[*].additionalExtensionProperties'))]",
-                                    "contains": "[[concat('ChangeType\\\":\\\"', parameters('fimChangeType'), '\\\"')]"
+                                    "anyOf": [
+                                      {
+                                        "allOf": [
+                                          {
+                                            "value": "[[parameters('deployCustomFIMRule')]",
+                                            "equals": "true"
+                                          },
+                                          {
+                                            "value": "[[string(current('Microsoft.Security/pricings/extensions[*].additionalExtensionProperties'))]",
+                                            "contains": "[[concat('RuleName\\\":\\\"', parameters('customFIMRuleName'), '\\\"')]"
+                                          },
+                                          {
+                                            "value": "[[string(current('Microsoft.Security/pricings/extensions[*].additionalExtensionProperties'))]",
+                                            "contains": "[[concat('ChangeType\\\":\\\"', parameters('customFIMRuleChangeType'), '\\\",\\\"IsCustomRule\\\":true,\\\"IsEnabled\\\":', parameters('customFIMRule'))]"
+                                          },
+                                          {
+                                            "value": "[[string(current('Microsoft.Security/pricings/extensions[*].additionalExtensionProperties'))]",
+                                            "contains": "[[replace(replace(string(parameters('customFIMRuleEntities')), '\\', '\\\\'), '\"', '\\\"')]"
+                                          }
+                                        ]
+                                      },
+                                      {
+                                        "allOf": [
+                                          {
+                                            "value": "[[parameters('deployCustomFIMRule')]",
+                                            "equals": "false"
+                                          },
+                                          {
+                                            "value": "[[string(current('Microsoft.Security/pricings/extensions[*].additionalExtensionProperties'))]",
+                                            "notContains": "IsCustomRule\\\":true"
+                                          }
+                                        ]
+                                      }
+                                    ]
                                   }
                                 ]
                               }
@@ -413,6 +583,21 @@
                     "fimChangeType": {
                       "value": "[[parameters('fimChangeType')]"
                     },
+                    "deployCustomFIMRule": {
+                      "value": "[[parameters('deployCustomFIMRule')]"
+                    },
+                    "customFIMRule": {
+                      "value": "[[parameters('customFIMRule')]"
+                    },
+                    "customFIMRuleName": {
+                      "value": "[[parameters('customFIMRuleName')]"
+                    },
+                    "customFIMRuleChangeType": {
+                      "value": "[[parameters('customFIMRuleChangeType')]"
+                    },
+                    "customFIMRuleEntities": {
+                      "value": "[[parameters('customFIMRuleEntities')]"
+                    },
                     "isMdeDesignatedSubscriptionEnabled": {
                       "value": "[[parameters('isMdeDesignatedSubscriptionEnabled')]"
                     }
@@ -439,6 +624,21 @@
                       "fimChangeType": {
                         "type": "String"
                       },
+                      "deployCustomFIMRule": {
+                        "type": "String"
+                      },
+                      "customFIMRule": {
+                        "type": "String"
+                      },
+                      "customFIMRuleName": {
+                        "type": "String"
+                      },
+                      "customFIMRuleChangeType": {
+                        "type": "String"
+                      },
+                      "customFIMRuleEntities": {
+                        "type": "Object"
+                      },
                       "isMdeDesignatedSubscriptionEnabled": {
                         "type": "String"
                       },
@@ -448,14 +648,15 @@
                       }
                     },
                     "variables": {
+                      "fimCustomRuleGuid": "[[guid(parameters('fimRuleGuid'), 'customRule')]",
                       "fimDefaultRules": [
                         {
+                          "ChangeType": "[[parameters('fimChangeType')]",
+                          "IsCustomRule": false,
+                          "IsEnabled": "[[bool(parameters('defaultFIMRule'))]",
+                          "RuleDescription": "Recommended critical entities for monitoring ",
                           "RuleId": "__RULEGUID__",
                           "RuleName": "Recommended to monitor",
-                          "RuleDescription": "Recommended critical entities for monitoring ",
-                          "IsCustomRule": false,
-                          "ChangeType": "[[parameters('fimChangeType')]",
-                          "IsEnabled": "[[bool(parameters('defaultFIMRule'))]",
                           "monitoredEntities": {
                             "windowsFiles": [
                               { "path": "\\Windows\\system.ini" },
@@ -513,7 +714,19 @@
                           }
                         }
                       ],
-                      "fimRulesJson": "[[replace(string(variables('fimDefaultRules')), '__RULEGUID__', parameters('fimRuleGuid'))]"
+                      "fimCustomRules": [
+                        {
+                          "ChangeType": "[[parameters('customFIMRuleChangeType')]",
+                          "IsCustomRule": true,
+                          "IsEnabled": "[[bool(parameters('customFIMRule'))]",
+                          "RuleDescription": "Custom rule deployed by Azure Policy",
+                          "RuleId": "__CUSTOMRULEGUID__",
+                          "RuleName": "[[parameters('customFIMRuleName')]",
+                          "monitoredEntities": "[[parameters('customFIMRuleEntities')]"
+                        }
+                      ],
+                      "fimRules": "[[if(equals(parameters('deployCustomFIMRule'), 'true'), concat(variables('fimDefaultRules'), variables('fimCustomRules')), variables('fimDefaultRules'))]",
+                      "fimRulesJson": "[[replace(replace(string(variables('fimRules')), '__RULEGUID__', parameters('fimRuleGuid')), '__CUSTOMRULEGUID__', variables('fimCustomRuleGuid'))]"
                     },
                     "resources": [
                       {
@@ -608,6 +821,21 @@
           },
           "fimChangeType": {
             "value": "[parameters('fimChangeType')]"
+          },
+          "deployCustomFIMRule": {
+            "value": "[parameters('deployCustomFIMRule')]"
+          },
+          "customFIMRule": {
+            "value": "[parameters('customFIMRule')]"
+          },
+          "customFIMRuleName": {
+            "value": "[parameters('customFIMRuleName')]"
+          },
+          "customFIMRuleChangeType": {
+            "value": "[parameters('customFIMRuleChangeType')]"
+          },
+          "customFIMRuleEntities": {
+            "value": "[parameters('customFIMRuleEntities')]"
           },
           "isMdeDesignatedSubscriptionEnabled": {
             "value": "[parameters('isMdeDesignatedSubscriptionEnabled')]"
