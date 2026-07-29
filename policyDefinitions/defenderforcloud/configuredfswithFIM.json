@@ -540,7 +540,7 @@
       "type": "Object",
       "metadata": {
         "displayName": "Custom FIM Rule Monitored Entities",
-        "description": "Entities monitored by the custom File integrity monitoring rule. Supply an object with windowsFiles, linuxFiles and registries arrays, each containing objects of the form { 'path': '<entity path>' }.",
+        "description": "Entities monitored by the custom File integrity monitoring rule. Supply an object with windowsFiles, linuxFiles and registries arrays, each containing objects of the form { 'path': '<entity path>' }. Backslashes must be escaped in JSON, so the Windows path \\Windows\\system.ini is supplied as '\\\\Windows\\\\system.ini' and the registry key hklm\\SECURITY\\POLICY\\ as 'hklm\\\\SECURITY\\\\POLICY\\\\'.",
         "portalReview": true
       },
       "defaultValue": {
