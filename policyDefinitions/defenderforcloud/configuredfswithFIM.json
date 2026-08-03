@@ -87,8 +87,8 @@
                               "exists": "true"
                             },
                             {
-                              "value": "[string(current('Microsoft.Security/pricings/extensions[*].additionalExtensionProperties'))]",
-                              "contains": "[concat('\"DefinedWorkspaceId\":\"', replace(parameters('fimWorkspace'), 'microsoft.operationalinsights', 'Microsoft.OperationalInsights'), '\"')]"
+                              "value": "[toLower(string(current('Microsoft.Security/pricings/extensions[*].additionalExtensionProperties')))]",
+                              "contains": "[toLower(concat('\"DefinedWorkspaceId\":\"', parameters('fimWorkspace'), '\"'))]"
                             },
                             {
                               "value": "[string(current('Microsoft.Security/pricings/extensions[*].additionalExtensionProperties'))]",
@@ -242,7 +242,8 @@
               },
               "variables": {
                 "fimCustomRuleGuid": "[guid(parameters('fimRuleGuid'), 'customRule')]",
-                "fimWorkspaceId": "[replace(parameters('fimWorkspace'), 'microsoft.operationalinsights', 'Microsoft.OperationalInsights')]",
+                "fimWorkspaceParts": "[split(parameters('fimWorkspace'), '/')]",
+                "fimWorkspaceId": "[if(empty(parameters('fimWorkspace')), '', concat('/subscriptions/', variables('fimWorkspaceParts')[2], '/resourceGroups/', variables('fimWorkspaceParts')[4], '/providers/Microsoft.OperationalInsights/workspaces/', last(variables('fimWorkspaceParts'))))]",
                 "fimDefaultRules": [
                   {
                     "ChangeType": "[parameters('fimChangeType')]",
