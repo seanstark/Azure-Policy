@@ -88,7 +88,7 @@
                             },
                             {
                               "value": "[string(current('Microsoft.Security/pricings/extensions[*].additionalExtensionProperties'))]",
-                              "contains": "[concat('\"DefinedWorkspaceId\":\"', parameters('fimWorkspace'), '\"')]"
+                              "contains": "[concat('\"DefinedWorkspaceId\":\"', replace(parameters('fimWorkspace'), 'microsoft.operationalinsights', 'Microsoft.OperationalInsights'), '\"')]"
                             },
                             {
                               "value": "[string(current('Microsoft.Security/pricings/extensions[*].additionalExtensionProperties'))]",
@@ -242,6 +242,7 @@
               },
               "variables": {
                 "fimCustomRuleGuid": "[guid(parameters('fimRuleGuid'), 'customRule')]",
+                "fimWorkspaceId": "[replace(parameters('fimWorkspace'), 'microsoft.operationalinsights', 'Microsoft.OperationalInsights')]",
                 "fimDefaultRules": [
                   {
                     "ChangeType": "[parameters('fimChangeType')]",
@@ -342,7 +343,7 @@
                         "name": "FileIntegrityMonitoring",
                         "isEnabled": "[parameters('isFIMEnabled')]",
                         "additionalExtensionProperties": {
-                          "DefinedWorkspaceId": "[parameters('fimWorkspace')]",
+                          "DefinedWorkspaceId": "[variables('fimWorkspaceId')]",
                           "FIMDetectionType": "Both",
                           "Rules": "[variables('fimRulesJson')]"
                         }
