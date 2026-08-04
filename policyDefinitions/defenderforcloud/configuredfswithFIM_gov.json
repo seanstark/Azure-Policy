@@ -1,0 +1,527 @@
+{
+  "mode": "All",
+  "policyRule": {
+    "if": {
+      "field": "type",
+      "equals": "Microsoft.Resources/subscriptions"
+    },
+    "then": {
+      "effect": "[parameters('effect')]",
+      "details": {
+        "type": "Microsoft.Security/pricings",
+        "name": "VirtualMachines",
+        "deploymentScope": "subscription",
+        "existenceScope": "subscription",
+        "roleDefinitionIds": [
+          "/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635"
+        ],
+        "existenceCondition": {
+          "allOf": [
+            {
+              "field": "Microsoft.Security/pricings/pricingTier",
+              "equals": "Standard"
+            },
+            {
+              "field": "Microsoft.Security/pricings/subPlan",
+              "equals": "[parameters('subPlan')]"
+            },
+            {
+              "count": {
+                "field": "Microsoft.Security/pricings/extensions[*]",
+                "where": {
+                  "allOf": [
+                    {
+                      "field": "Microsoft.Security/pricings/extensions[*].name",
+                      "equals": "AgentlessVmScanning"
+                    },
+                    {
+                      "field": "Microsoft.Security/pricings/extensions[*].isEnabled",
+                      "equals": "[if(equals(parameters('subPlan'), 'P2'), parameters('isAgentlessVmScanningEnabled'), 'false')]"
+                    }
+                  ]
+                }
+              },
+              "equals": 1
+            },
+            {
+              "count": {
+                "field": "Microsoft.Security/pricings/extensions[*]",
+                "where": {
+                  "allOf": [
+                    {
+                      "field": "Microsoft.Security/pricings/extensions[*].name",
+                      "equals": "FileIntegrityMonitoring"
+                    },
+                    {
+                      "field": "Microsoft.Security/pricings/extensions[*].isEnabled",
+                      "equals": "[parameters('isFIMEnabled')]"
+                    },
+                    {
+                      "anyOf": [
+                        {
+                          "value": "[parameters('isFIMEnabled')]",
+                          "equals": "false"
+                        },
+                        {
+                          "allOf": [
+                            {
+                              "field": "Microsoft.Security/pricings/extensions[*].additionalExtensionProperties",
+                              "exists": "true"
+                            },
+                            {
+                              "value": "[toLower(string(current('Microsoft.Security/pricings/extensions[*].additionalExtensionProperties')))]",
+                              "contains": "[toLower(concat('\"DefinedWorkspaceId\":\"', parameters('fimWorkspace'), '\"'))]"
+                            },
+                            {
+                              "value": "[string(current('Microsoft.Security/pricings/extensions[*].additionalExtensionProperties'))]",
+                              "contains": "\"FIMDetectionType\":\"Both\""
+                            },
+                            {
+                              "value": "[string(current('Microsoft.Security/pricings/extensions[*].additionalExtensionProperties'))]",
+                              "contains": "\"Rules\":\""
+                            },
+                            {
+                              "value": "[string(current('Microsoft.Security/pricings/extensions[*].additionalExtensionProperties'))]",
+                              "contains": "RuleName\\\":\\\"Recommended to monitor\\\""
+                            },
+                            {
+                              "value": "[string(current('Microsoft.Security/pricings/extensions[*].additionalExtensionProperties'))]",
+                              "contains": "[concat('ChangeType\\\":\\\"', parameters('fimChangeType'), '\\\",\\\"IsCustomRule\\\":false,\\\"IsEnabled\\\":', parameters('defaultFIMRule'))]"
+                            },
+                            {
+                              "anyOf": [
+                                {
+                                  "allOf": [
+                                    {
+                                      "value": "[parameters('deployCustomFIMRule')]",
+                                      "equals": "true"
+                                    },
+                                    {
+                                      "value": "[string(current('Microsoft.Security/pricings/extensions[*].additionalExtensionProperties'))]",
+                                      "contains": "[concat('RuleName\\\":\\\"', parameters('customFIMRuleName'), '\\\"')]"
+                                    },
+                                    {
+                                      "value": "[string(current('Microsoft.Security/pricings/extensions[*].additionalExtensionProperties'))]",
+                                      "contains": "[concat('ChangeType\\\":\\\"', parameters('customFIMRuleChangeType'), '\\\",\\\"IsCustomRule\\\":true,\\\"IsEnabled\\\":', parameters('customFIMRule'))]"
+                                    },
+                                    {
+                                      "value": "[string(current('Microsoft.Security/pricings/extensions[*].additionalExtensionProperties'))]",
+                                      "contains": "[replace(replace(string(parameters('customFIMRuleEntities')), '\\', '\\\\'), '\"', '\\\"')]"
+                                    }
+                                  ]
+                                },
+                                {
+                                  "allOf": [
+                                    {
+                                      "value": "[parameters('deployCustomFIMRule')]",
+                                      "equals": "false"
+                                    },
+                                    {
+                                      "value": "[string(current('Microsoft.Security/pricings/extensions[*].additionalExtensionProperties'))]",
+                                      "notContains": "IsCustomRule\\\":true"
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              },
+              "equals": 1
+            }
+          ]
+        },
+        "deployment": {
+          "location": "westeurope",
+          "properties": {
+            "mode": "incremental",
+            "parameters": {
+              "subPlan": {
+                "value": "[parameters('subPlan')]"
+              },
+              "isAgentlessVmScanningEnabled": {
+                "value": "[parameters('isAgentlessVmScanningEnabled')]"
+              },
+              "isFIMEnabled": {
+                "value": "[parameters('isFIMEnabled')]"
+              },
+              "fimWorkspace": {
+                "value": "[parameters('fimWorkspace')]"
+              },
+              "defaultFIMRule": {
+                "value": "[parameters('defaultFIMRule')]"
+              },
+              "fimChangeType": {
+                "value": "[parameters('fimChangeType')]"
+              },
+              "deployCustomFIMRule": {
+                "value": "[parameters('deployCustomFIMRule')]"
+              },
+              "customFIMRule": {
+                "value": "[parameters('customFIMRule')]"
+              },
+              "customFIMRuleName": {
+                "value": "[parameters('customFIMRuleName')]"
+              },
+              "customFIMRuleChangeType": {
+                "value": "[parameters('customFIMRuleChangeType')]"
+              },
+              "customFIMRuleEntities": {
+                "value": "[parameters('customFIMRuleEntities')]"
+              }
+            },
+            "template": {
+              "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+              "contentVersion": "1.0.0.0",
+              "parameters": {
+                "subPlan": {
+                  "type": "String"
+                },
+                "isAgentlessVmScanningEnabled": {
+                  "type": "String"
+                },
+                "isFIMEnabled": {
+                  "type": "String"
+                },
+                "fimWorkspace": {
+                  "type": "String"
+                },
+                "defaultFIMRule": {
+                  "type": "String"
+                },
+                "fimChangeType": {
+                  "type": "String"
+                },
+                "deployCustomFIMRule": {
+                  "type": "String"
+                },
+                "customFIMRule": {
+                  "type": "String"
+                },
+                "customFIMRuleName": {
+                  "type": "String"
+                },
+                "customFIMRuleChangeType": {
+                  "type": "String"
+                },
+                "customFIMRuleEntities": {
+                  "type": "Object"
+                },
+                "fimRuleGuid": {
+                  "type": "String",
+                  "defaultValue": "[newGuid()]"
+                }
+              },
+              "variables": {
+                "fimCustomRuleGuid": "[guid(parameters('fimRuleGuid'), 'customRule')]",
+                "fimWorkspaceParts": "[split(parameters('fimWorkspace'), '/')]",
+                "fimWorkspaceId": "[if(empty(parameters('fimWorkspace')), '', concat('/subscriptions/', variables('fimWorkspaceParts')[2], '/resourceGroups/', variables('fimWorkspaceParts')[4], '/providers/Microsoft.OperationalInsights/workspaces/', last(variables('fimWorkspaceParts'))))]",
+                "fimDefaultRules": [
+                  {
+                    "ChangeType": "[parameters('fimChangeType')]",
+                    "IsCustomRule": false,
+                    "IsEnabled": "[bool(parameters('defaultFIMRule'))]",
+                    "RuleDescription": "Recommended critical entities for monitoring ",
+                    "RuleId": "__RULEGUID__",
+                    "RuleName": "Recommended to monitor",
+                    "monitoredEntities": {
+                      "windowsFiles": [
+                        { "path": "\\Windows\\system.ini" },
+                        { "path": "\\Windows\\win.ini" },
+                        { "path": "\\Windows\\regedit.exe" },
+                        { "path": "\\Windows\\explorer.exe" },
+                        { "path": "\\Windows\\System32\\userinit.exe" },
+                        { "path": "autoexec.bat" },
+                        { "path": "boot.ini" },
+                        { "path": "config.sys" }
+                      ],
+                      "linuxFiles": [
+                        { "path": "/bin/login" },
+                        { "path": "/bin/passwd" },
+                        { "path": "/etc/crontab" },
+                        { "path": "/etc/*.conf" },
+                        { "path": "/usr/bin/" },
+                        { "path": "/usr/sbin/" },
+                        { "path": "/bin/" },
+                        { "path": "/sbin/" },
+                        { "path": "/boot/" },
+                        { "path": "/usr/local/bin/" },
+                        { "path": "/usr/local/sbin/" },
+                        { "path": "/opt/bin/" },
+                        { "path": "/opt/sbin/" },
+                        { "path": "/etc/init.d/" },
+                        { "path": "/etc/cron.hourly/" },
+                        { "path": "/etc/cron.daily/" },
+                        { "path": "/etc/cron.weekly/" },
+                        { "path": "/etc/cron.monthly/" }
+                      ],
+                      "registries": [
+                        { "path": "hklm\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Windows\\loadappinit_dlls" },
+                        { "path": "hklm\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Windows\\appinit_dlls" },
+                        { "path": "hklm\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Windows\\iconservicelib" },
+                        { "path": "hklm\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders\\common startup" },
+                        { "path": "hklm\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders\\startup" },
+                        { "path": "hklm\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders\\common startup" },
+                        { "path": "hklm\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders\\startup" },
+                        { "path": "hklm\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\\" },
+                        { "path": "hklm\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce\\" },
+                        { "path": "hklm\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunServicesOnce\\" },
+                        { "path": "hklm\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows NT\\CurrentVersion\\Windows\\appinit_dlls" },
+                        { "path": "hklm\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows NT\\CurrentVersion\\Windows\\loadappinit_dlls" },
+                        { "path": "hklm\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders\\common startup" },
+                        { "path": "hklm\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders\\startup" },
+                        { "path": "hklm\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders\\common startup" },
+                        { "path": "hklm\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders\\startup" },
+                        { "path": "hklm\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Run\\" },
+                        { "path": "hklm\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\RunOnce\\" },
+                        { "path": "hklm\\SOFTWARE\\WOW6432Node\\Microsoft\\Cryptography\\OID\\" },
+                        { "path": "hklm\\SOFTWARE\\Microsoft\\Cryptography\\OID\\" },
+                        { "path": "hklm\\SECURITY\\POLICY\\SECRETS\\" }
+                      ]
+                    }
+                  }
+                ],
+                "fimCustomRules": [
+                  {
+                    "ChangeType": "[parameters('customFIMRuleChangeType')]",
+                    "IsCustomRule": true,
+                    "IsEnabled": "[bool(parameters('customFIMRule'))]",
+                    "RuleDescription": "Custom rule deployed by Azure Policy",
+                    "RuleId": "__CUSTOMRULEGUID__",
+                    "RuleName": "[parameters('customFIMRuleName')]",
+                    "monitoredEntities": "[parameters('customFIMRuleEntities')]"
+                  }
+                ],
+                "fimRules": "[if(equals(parameters('deployCustomFIMRule'), 'true'), concat(variables('fimDefaultRules'), variables('fimCustomRules')), variables('fimDefaultRules'))]",
+                "fimRulesJson": "[replace(replace(string(variables('fimRules')), '__RULEGUID__', parameters('fimRuleGuid')), '__CUSTOMRULEGUID__', variables('fimCustomRuleGuid'))]"
+              },
+              "resources": [
+                {
+                  "type": "Microsoft.Security/pricings",
+                  "apiVersion": "2024-01-01",
+                  "name": "VirtualMachines",
+                  "properties": {
+                    "pricingTier": "Standard",
+                    "subPlan": "[parameters('subPlan')]",
+                    "extensions": [
+                      {
+                        "name": "AgentlessVmScanning",
+                        "isEnabled": "[parameters('isAgentlessVmScanningEnabled')]"
+                      },
+                      {
+                        "name": "FileIntegrityMonitoring",
+                        "isEnabled": "[parameters('isFIMEnabled')]",
+                        "additionalExtensionProperties": {
+                          "DefinedWorkspaceId": "[variables('fimWorkspaceId')]",
+                          "FIMDetectionType": "Both",
+                          "Rules": "[variables('fimRulesJson')]"
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "type": "Microsoft.Security/settings",
+                  "apiVersion": "2022-05-01",
+                  "name": "WDATP",
+                  "kind": "DataExportSettings",
+                  "properties": {
+                    "enabled": "true"
+                  }
+                },
+                {
+                  "type": "Microsoft.Security/serverVulnerabilityAssessmentsSettings",
+                  "apiVersion": "2023-05-01",
+                  "name": "AzureServersSetting",
+                  "kind": "AzureServersSetting",
+                  "properties": {
+                    "selectedProvider": "MdeTvm"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "parameters": {
+    "effect": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Effect",
+        "description": "Enable or disable the execution of the policy"
+      },
+      "allowedValues": [
+        "DeployIfNotExists",
+        "Disabled"
+      ],
+      "defaultValue": "DeployIfNotExists"
+    },
+    "subPlan": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Defender for Servers plans",
+        "description": "Select a Defender for Servers plan, P2 is required for File integrity monitoring and Agentless VM Scanning",
+        "portalReview": true
+      },
+      "allowedValues": [
+        "P2"
+      ],
+      "defaultValue": "P2"
+    },
+    "isAgentlessVmScanningEnabled": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Agentless VM Scanning Enabled",
+        "description": "Enable or disable the Agentless VM Scanning add-on feature",
+        "portalReview": true
+      },
+      "allowedValues": [
+        "true",
+        "false"
+      ],
+      "defaultValue": "true"
+    },
+    "isFIMEnabled": {
+      "type": "String",
+      "metadata": {
+        "displayName": "File integrity monitoring Enabled",
+        "description": "Enable or disable File integrity monitoring",
+        "portalReview": true
+      },
+      "allowedValues": [
+        "true",
+        "false"
+      ],
+      "defaultValue": "true"
+    },
+    "fimWorkspace": {
+      "type": "String",
+      "metadata": {
+        "displayName": "File integrity monitoring workspace",
+        "description": "File integrity monitoring workspace",
+        "portalReview": true,
+        "strongType": "omsWorkspace"
+      },
+      "defaultValue": ""
+    },
+    "defaultFIMRule": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Default FIM Rule Enabled",
+        "description": "Enable or disable the default File integrity monitoring rule 'Recommended to monitor' that is deployed with the plan",
+        "portalReview": true
+      },
+      "allowedValues": [
+        "true",
+        "false"
+      ],
+      "defaultValue": "true"
+    },
+    "fimChangeType": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Default FIM Rule Change Types",
+        "description": "Change types monitored by the default File integrity monitoring rule 'Recommended to monitor'. C = Created, D = Deleted, M = Modified, R = Renamed. Letters must be supplied in CDMR order.",
+        "portalReview": true
+      },
+      "allowedValues": [
+        "CDMR",
+        "CDM",
+        "CDR",
+        "CMR",
+        "DMR",
+        "CD",
+        "CM",
+        "CR",
+        "DM",
+        "DR",
+        "MR",
+        "C",
+        "D",
+        "M",
+        "R"
+      ],
+      "defaultValue": "CDMR"
+    },
+    "deployCustomFIMRule": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Deploy Custom FIM Rule",
+        "description": "Deploy the additional custom File integrity monitoring rule. When set to false the custom rule is not added to the plan and any existing custom rules are removed by remediation",
+        "portalReview": true
+      },
+      "allowedValues": [
+        "true",
+        "false"
+      ],
+      "defaultValue": "false"
+    },
+    "customFIMRule": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Custom FIM Rule Enabled",
+        "description": "Enable or disable the additional custom File integrity monitoring rule that is deployed with the plan",
+        "portalReview": true
+      },
+      "allowedValues": [
+        "true",
+        "false"
+      ],
+      "defaultValue": "false"
+    },
+    "customFIMRuleName": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Custom FIM Rule Name",
+        "description": "Name of the additional custom File integrity monitoring rule",
+        "portalReview": true
+      },
+      "defaultValue": "Custom monitoring rule"
+    },
+    "customFIMRuleChangeType": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Custom FIM Rule Change Types",
+        "description": "Change types monitored by the custom File integrity monitoring rule. C = Created, D = Deleted, M = Modified, R = Renamed. Letters must be supplied in CDMR order.",
+        "portalReview": true
+      },
+      "allowedValues": [
+        "CDMR",
+        "CDM",
+        "CDR",
+        "CMR",
+        "DMR",
+        "CD",
+        "CM",
+        "CR",
+        "DM",
+        "DR",
+        "MR",
+        "C",
+        "D",
+        "M",
+        "R"
+      ],
+      "defaultValue": "CDMR"
+    },
+    "customFIMRuleEntities": {
+      "type": "Object",
+      "metadata": {
+        "displayName": "Custom FIM Rule Monitored Entities",
+        "description": "Entities monitored by the custom File integrity monitoring rule. Supply an object with windowsFiles, linuxFiles and registries arrays, each containing objects of the form { 'path': '<entity path>' }. Backslashes must be escaped in JSON, so the Windows path \\Windows\\system.ini is supplied as '\\\\Windows\\\\system.ini' and the registry key hklm\\SECURITY\\POLICY\\ as 'hklm\\\\SECURITY\\\\POLICY\\\\'.",
+        "portalReview": true
+      },
+      "defaultValue": {
+        "windowsFiles": [],
+        "linuxFiles": [],
+        "registries": []
+      }
+    }
+  }
+}
