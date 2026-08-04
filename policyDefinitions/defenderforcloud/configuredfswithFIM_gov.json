@@ -332,15 +332,6 @@
                   "properties": {
                     "enabled": "true"
                   }
-                },
-                {
-                  "type": "Microsoft.Security/serverVulnerabilityAssessmentsSettings",
-                  "apiVersion": "2023-05-01",
-                  "name": "AzureServersSetting",
-                  "kind": "AzureServersSetting",
-                  "properties": {
-                    "selectedProvider": "MdeTvm"
-                  }
                 }
               ]
             }
