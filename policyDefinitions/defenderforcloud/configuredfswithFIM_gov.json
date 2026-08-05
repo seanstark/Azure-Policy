@@ -150,7 +150,7 @@
                 "value": "[parameters('isFIMEnabled')]"
               },
               "fimWorkspace": {
-                "value": "[parameters('fimWorkspace')]"
+                "value": "[replace(parameters('fimWorkspace'), 'microsoft.operationalinsights', 'Microsoft.OperationalInsights')]"
               },
               "defaultFIMRule": {
                 "value": "[parameters('defaultFIMRule')]"
