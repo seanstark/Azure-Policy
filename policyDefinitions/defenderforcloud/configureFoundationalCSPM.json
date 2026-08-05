@@ -1,0 +1,114 @@
+{
+  "mode": "All",
+  "policyRule": {
+    "if": {
+      "field": "type",
+      "equals": "Microsoft.Resources/subscriptions"
+    },
+    "then": {
+      "effect": "[parameters('effect')]",
+      "details": {
+        "type": "Microsoft.Security/pricings",
+        "name": "FoundationalCspm",
+        "deploymentScope": "subscription",
+        "existenceScope": "subscription",
+        "roleDefinitionIds": [
+          "/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635"
+        ],
+        "existenceCondition": {
+          "anyOf": [
+            {
+              "allOf": [
+                {
+                  "field": "name",
+                  "equals": "FoundationalCspm"
+                },
+                {
+                  "field": "Microsoft.Security/pricings/pricingTier",
+                  "equals": "[if(equals(parameters('FoundationalCspm'), 'Enabled'), 'Standard', 'Free')]"
+                }
+              ]
+            },
+            {
+              "allOf": [
+                {
+                  "field": "name",
+                  "equals": "Discovery"
+                },
+                {
+                  "field": "Microsoft.Security/pricings/pricingTier",
+                  "equals": "[if(equals(parameters('FoundationalCspm'), 'Enabled'), 'Standard', 'Free')]"
+                }
+              ]
+            }
+          ]
+        },
+        "deployment": {
+          "location": "eastus",
+          "properties": {
+            "mode": "incremental",
+            "parameters": {
+              "pricingTier": {
+                "value": "[if(equals(parameters('FoundationalCspm'), 'Enabled'), 'Standard', 'Free')]"
+              }
+            },
+            "template": {
+              "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+              "contentVersion": "1.0.0.0",
+              "parameters": {
+                "pricingTier": {
+                  "type": "String"
+                }
+              },
+              "resources": [
+                {
+                  "type": "Microsoft.Security/pricings",
+                  "apiVersion": "2024-01-01",
+                  "name": "FoundationalCspm",
+                  "properties": {
+                    "pricingTier": "[parameters('pricingTier')]"
+                  }
+                },
+                {
+                  "type": "Microsoft.Security/pricings",
+                  "apiVersion": "2024-01-01",
+                  "name": "Discovery",
+                  "properties": {
+                    "pricingTier": "[parameters('pricingTier')]"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  },
+  "parameters": {
+    "effect": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Effect",
+        "description": "Enable or disable the execution of the policy"
+      },
+      "allowedValues": [
+        "DeployIfNotExists",
+        "Disabled"
+      ],
+      "defaultValue": "DeployIfNotExists"
+    },
+    "FoundationalCspm": {
+      "type": "String",
+      "metadata": {
+        "displayName": "Foundational CSPM",
+        "description": "Enable or disable the Free Foundational CSPM plan",
+        "portalReview": true
+      },
+      "allowedValues": [
+        "Enabled",
+        "Disabled"
+      ],
+      "defaultValue": "Enabled"
+    }
+  }
+}
