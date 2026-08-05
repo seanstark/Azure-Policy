@@ -136,7 +136,7 @@
           ]
         },
         "deployment": {
-          "location": "westeurope",
+          "location": "usgovarizona",
           "properties": {
             "mode": "incremental",
             "parameters": {
