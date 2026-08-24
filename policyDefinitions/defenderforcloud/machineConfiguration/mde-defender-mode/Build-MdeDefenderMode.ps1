@@ -91,6 +91,38 @@ if (-not $ContentUri) {
     return
 }
 
+if (-not $ContentUri.IsAbsoluteUri -or $ContentUri.Scheme -ne 'https') {
+    throw "ContentUri must be an absolute HTTPS URL. Received: '$ContentUri'."
+}
+
+$downloadPath = Join-Path ([System.IO.Path]::GetTempPath()) "MdeDefenderModeConfig-$([guid]::NewGuid()).zip"
+$extractPath = "$downloadPath-extracted"
+
+try {
+    Write-Host "Validating package URL '$ContentUri'..."
+    $response = Invoke-WebRequest -Uri $ContentUri -OutFile $downloadPath -PassThru
+    if ($response.StatusCode -ne 200 -or (Get-Item $downloadPath).Length -eq 0) {
+        throw "The package download returned HTTP $($response.StatusCode) or an empty response."
+    }
+
+    Expand-Archive -Path $downloadPath -DestinationPath $extractPath -Force
+    $downloadedMof = Join-Path $extractPath "$configurationName.mof"
+    if (-not (Test-Path $downloadedMof -PathType Leaf)) {
+        throw "The downloaded file isn't the expected Machine Configuration package. '$configurationName.mof' wasn't found at the ZIP root."
+    }
+
+    Write-Host "Package URL validated: HTTP $($response.StatusCode), $((Get-Item $downloadPath).Length) bytes."
+}
+catch {
+    $details = @($_.Exception.Message, $_.ErrorDetails.Message) |
+        Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+        Select-Object -Unique
+    throw "Unable to download or validate ContentUri '$ContentUri'. $($details -join ' ') Verify that the GitHub release and asset are public and that this machine can follow the download redirect."
+}
+finally {
+    Remove-Item -Path $downloadPath, $extractPath -Recurse -Force -ErrorAction SilentlyContinue
+}
+
 New-Item -ItemType Directory -Path $policyPath -Force | Out-Null
 
 $policyParameter = @(
@@ -120,7 +152,16 @@ $auditPolicyParameters = $commonPolicyParameters + @{
     Path        = (Join-Path $policyPath 'audit')
     Mode        = 'Audit'
 }
-New-GuestConfigurationPolicy @auditPolicyParameters | Out-Host
+try {
+    Write-Host 'Generating Audit policy definition...'
+    New-GuestConfigurationPolicy @auditPolicyParameters | Out-Host
+}
+catch {
+    $details = @($_.Exception.Message, $_.ErrorDetails.Message, $_.Exception.InnerException.Message) |
+        Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+        Select-Object -Unique
+    throw "Audit policy generation failed with GuestConfiguration $((Get-Module GuestConfiguration).Version): $($details -join ' | ')"
+}
 
 $enforcementPolicyParameters = $commonPolicyParameters + @{
     PolicyId    = '3864c9e3-3c18-49d3-8290-118fd3b8681d'
@@ -129,6 +170,15 @@ $enforcementPolicyParameters = $commonPolicyParameters + @{
     Path        = (Join-Path $policyPath 'configure')
     Mode        = 'ApplyAndAutoCorrect'
 }
-New-GuestConfigurationPolicy @enforcementPolicyParameters | Out-Host
+try {
+    Write-Host 'Generating ApplyAndAutoCorrect policy definition...'
+    New-GuestConfigurationPolicy @enforcementPolicyParameters | Out-Host
+}
+catch {
+    $details = @($_.Exception.Message, $_.ErrorDetails.Message, $_.Exception.InnerException.Message) |
+        Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+        Select-Object -Unique
+    throw "ApplyAndAutoCorrect policy generation failed with GuestConfiguration $((Get-Module GuestConfiguration).Version): $($details -join ' | ')"
+}
 
 Write-Host "Policy definitions created under '$policyPath'."

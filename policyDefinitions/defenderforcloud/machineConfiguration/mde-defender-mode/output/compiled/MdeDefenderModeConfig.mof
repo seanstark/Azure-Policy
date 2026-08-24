@@ -1,18 +1,18 @@
 /*
 @TargetNode='localhost'
 @GeneratedBy=seanstark
-@GenerationDate=08/24/2026 11:29:09
+@GenerationDate=08/24/2026 11:54:12
 @GenerationHost=LAPTOP-NLOC0RP2
 */
 
 instance of MdeDefenderMode as $MdeDefenderMode1ref
 {
 Mode = "Active";
- SourceInfo = "C:\\repos\\Azure-Policy\\policyDefinitions\\defenderforcloud\\machineConfiguration\\mde-defender-mode\\MdeDefenderModeConfig.ps1::4::5::MdeDefenderMode";
- ModuleVersion = "1.0.0";
- ResourceID = "[MdeDefenderMode]DefenderForEndpointMode";
  ModuleName = "MdeDefenderMode";
- Name = "ForceDefenderPassiveMode";
+ Name = "ForceDefenderPassiveMode";
+ ResourceID = "[MdeDefenderMode]DefenderForEndpointMode";
+ ModuleVersion = "1.0.0";
+ SourceInfo = "C:\\repos\\Azure-Policy\\policyDefinitions\\defenderforcloud\\machineConfiguration\\mde-defender-mode\\MdeDefenderModeConfig.ps1::4::5::MdeDefenderMode";
  ConfigurationName = "MdeDefenderModeConfig";
 };
 instance of OMI_ConfigurationDocument
@@ -26,7 +26,7 @@ instance of OMI_ConfigurationDocument
 
                         Author="seanstark";
 
-                        GenerationDate="08/24/2026 11:29:09";
+                        GenerationDate="08/24/2026 11:54:12";
 
                         GenerationHost="LAPTOP-NLOC0RP2";
 
