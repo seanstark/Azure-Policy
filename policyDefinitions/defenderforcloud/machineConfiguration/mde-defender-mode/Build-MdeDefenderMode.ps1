@@ -28,7 +28,7 @@ $policyPath = Join-Path $OutputPath 'policies'
 
 $requiredModules = @(
     @{ Name = 'GuestConfiguration'; MinimumVersion = '3.4.2' }
-    @{ Name = 'PSDesiredStateConfiguration'; RequiredVersion = '2.0.7' }
+    @{ Name = 'PSDesiredStateConfiguration'; MinimumVersion = '2.0.7' }
 )
 
 foreach ($requiredModule in $requiredModules) {
@@ -67,8 +67,8 @@ Install it from this same x64 PowerShell 7 process. See README.md for the comman
 New-Item -ItemType Directory -Path $compiledPath -Force | Out-Null
 $env:PSModulePath = "$modulePath$([System.IO.Path]::PathSeparator)$env:PSModulePath"
 
-Import-Module PSDesiredStateConfiguration -RequiredVersion 2.0.7 -Force
-Import-Module GuestConfiguration -MinimumVersion 3.4.2 -Force
+Import-Module PSDesiredStateConfiguration
+Import-Module GuestConfiguration
 . $configurationPath
 MdeDefenderModeConfig -OutputPath $compiledPath
 
