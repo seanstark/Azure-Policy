@@ -1,0 +1,196 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "description": "Configures Defender for Servers Plan 2 with Agentless VM Scanning, File Integrity Monitoring, and WDATP data export in Azure Government."
+  },
+  "parameters": {
+    "subPlan": {
+      "type": "string",
+      "defaultValue": "P2",
+      "allowedValues": ["P2"]
+    },
+    "isAgentlessVmScanningEnabled": {
+      "type": "string",
+      "defaultValue": "true",
+      "allowedValues": ["true", "false"]
+    },
+    "isFIMEnabled": {
+      "type": "string",
+      "defaultValue": "true",
+      "allowedValues": ["true", "false"]
+    },
+    "fimWorkspace": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Resource ID of the Log Analytics workspace used by File Integrity Monitoring."
+      }
+    },
+    "defaultFIMRule": {
+      "type": "string",
+      "defaultValue": "true",
+      "allowedValues": ["true", "false"]
+    },
+    "fimChangeType": {
+      "type": "string",
+      "defaultValue": "CDMR",
+      "allowedValues": ["CDMR", "CDM", "CDR", "CMR", "DMR", "CD", "CM", "CR", "DM", "DR", "MR", "C", "D", "M", "R"]
+    },
+    "deployCustomFIMRule": {
+      "type": "string",
+      "defaultValue": "false",
+      "allowedValues": ["true", "false"]
+    },
+    "customFIMRule": {
+      "type": "string",
+      "defaultValue": "false",
+      "allowedValues": ["true", "false"]
+    },
+    "customFIMRuleName": {
+      "type": "string",
+      "defaultValue": "Custom monitoring rule"
+    },
+    "customFIMRuleChangeType": {
+      "type": "string",
+      "defaultValue": "CDMR",
+      "allowedValues": ["CDMR", "CDM", "CDR", "CMR", "DMR", "CD", "CM", "CR", "DM", "DR", "MR", "C", "D", "M", "R"]
+    },
+    "customFIMRuleEntities": {
+      "type": "object",
+      "defaultValue": {
+        "windowsFiles": [],
+        "linuxFiles": [],
+        "registries": []
+      }
+    },
+    "fimRuleGuid": {
+      "type": "string",
+      "defaultValue": "[newGuid()]"
+    }
+  },
+  "variables": {
+    "fimCustomRuleGuid": "[guid(parameters('fimRuleGuid'), 'customRule')]",
+    "fimWorkspaceParts": "[split(parameters('fimWorkspace'), '/')]",
+    "fimWorkspaceId": "[if(empty(parameters('fimWorkspace')), '', concat('/subscriptions/', variables('fimWorkspaceParts')[2], '/resourceGroups/', variables('fimWorkspaceParts')[4], '/providers/Microsoft.OperationalInsights/workspaces/', last(variables('fimWorkspaceParts'))))]",
+    "fimDefaultRules": [
+      {
+        "ChangeType": "[parameters('fimChangeType')]",
+        "IsCustomRule": false,
+        "IsEnabled": "[bool(parameters('defaultFIMRule'))]",
+        "RuleDescription": "Recommended critical entities for monitoring ",
+        "RuleId": "__RULEGUID__",
+        "RuleName": "Recommended to monitor",
+        "monitoredEntities": {
+          "windowsFiles": [
+            { "path": "\\Windows\\system.ini" },
+            { "path": "\\Windows\\win.ini" },
+            { "path": "\\Windows\\regedit.exe" },
+            { "path": "\\Windows\\explorer.exe" },
+            { "path": "\\Windows\\System32\\userinit.exe" },
+            { "path": "autoexec.bat" },
+            { "path": "boot.ini" },
+            { "path": "config.sys" }
+          ],
+          "linuxFiles": [
+            { "path": "/bin/login" },
+            { "path": "/bin/passwd" },
+            { "path": "/etc/crontab" },
+            { "path": "/etc/*.conf" },
+            { "path": "/usr/bin/" },
+            { "path": "/usr/sbin/" },
+            { "path": "/bin/" },
+            { "path": "/sbin/" },
+            { "path": "/boot/" },
+            { "path": "/usr/local/bin/" },
+            { "path": "/usr/local/sbin/" },
+            { "path": "/opt/bin/" },
+            { "path": "/opt/sbin/" },
+            { "path": "/etc/init.d/" },
+            { "path": "/etc/cron.hourly/" },
+            { "path": "/etc/cron.daily/" },
+            { "path": "/etc/cron.weekly/" },
+            { "path": "/etc/cron.monthly/" }
+          ],
+          "registries": [
+            { "path": "hklm\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Windows\\loadappinit_dlls" },
+            { "path": "hklm\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Windows\\appinit_dlls" },
+            { "path": "hklm\\SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Windows\\iconservicelib" },
+            { "path": "hklm\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders\\common startup" },
+            { "path": "hklm\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders\\startup" },
+            { "path": "hklm\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders\\common startup" },
+            { "path": "hklm\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders\\startup" },
+            { "path": "hklm\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run\\" },
+            { "path": "hklm\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunOnce\\" },
+            { "path": "hklm\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\RunServicesOnce\\" },
+            { "path": "hklm\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows NT\\CurrentVersion\\Windows\\appinit_dlls" },
+            { "path": "hklm\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows NT\\CurrentVersion\\Windows\\loadappinit_dlls" },
+            { "path": "hklm\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders\\common startup" },
+            { "path": "hklm\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders\\startup" },
+            { "path": "hklm\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders\\common startup" },
+            { "path": "hklm\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders\\startup" },
+            { "path": "hklm\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Run\\" },
+            { "path": "hklm\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\RunOnce\\" },
+            { "path": "hklm\\SOFTWARE\\WOW6432Node\\Microsoft\\Cryptography\\OID\\" },
+            { "path": "hklm\\SOFTWARE\\Microsoft\\Cryptography\\OID\\" },
+            { "path": "hklm\\SECURITY\\POLICY\\SECRETS\\" }
+          ]
+        }
+      }
+    ],
+    "fimCustomRules": [
+      {
+        "ChangeType": "[parameters('customFIMRuleChangeType')]",
+        "IsCustomRule": true,
+        "IsEnabled": "[bool(parameters('customFIMRule'))]",
+        "RuleDescription": "Custom rule deployed by ARM template",
+        "RuleId": "__CUSTOMRULEGUID__",
+        "RuleName": "[parameters('customFIMRuleName')]",
+        "monitoredEntities": "[parameters('customFIMRuleEntities')]"
+      }
+    ],
+    "fimRules": "[if(equals(parameters('deployCustomFIMRule'), 'true'), concat(variables('fimDefaultRules'), variables('fimCustomRules')), variables('fimDefaultRules'))]",
+    "fimRulesJson": "[replace(replace(string(variables('fimRules')), '__RULEGUID__', parameters('fimRuleGuid')), '__CUSTOMRULEGUID__', variables('fimCustomRuleGuid'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Security/pricings",
+      "apiVersion": "2024-01-01",
+      "name": "VirtualMachines",
+      "properties": {
+        "pricingTier": "Standard",
+        "subPlan": "[parameters('subPlan')]",
+        "extensions": [
+          {
+            "name": "AgentlessVmScanning",
+            "isEnabled": "[parameters('isAgentlessVmScanningEnabled')]"
+          },
+          {
+            "name": "FileIntegrityMonitoring",
+            "isEnabled": "[parameters('isFIMEnabled')]",
+            "additionalExtensionProperties": {
+              "DefinedWorkspaceId": "[variables('fimWorkspaceId')]",
+              "FIMDetectionType": "Both",
+              "Rules": "[variables('fimRulesJson')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "Microsoft.Security/settings",
+      "apiVersion": "2022-05-01",
+      "name": "WDATP",
+      "kind": "DataExportSettings",
+      "properties": {
+        "enabled": "true"
+      }
+    }
+  ],
+  "outputs": {
+    "fimWorkspaceId": {
+      "type": "string",
+      "value": "[variables('fimWorkspaceId')]"
+    }
+  }
+}

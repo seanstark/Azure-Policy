@@ -1,0 +1,35 @@
+/*
+@TargetNode='localhost'
+@GeneratedBy=seanstark
+@GenerationDate=08/24/2026 11:29:09
+@GenerationHost=LAPTOP-NLOC0RP2
+*/
+
+instance of MdeDefenderMode as $MdeDefenderMode1ref
+{
+Mode = "Active";
+ SourceInfo = "C:\\repos\\Azure-Policy\\policyDefinitions\\defenderforcloud\\machineConfiguration\\mde-defender-mode\\MdeDefenderModeConfig.ps1::4::5::MdeDefenderMode";
+ ModuleVersion = "1.0.0";
+ ResourceID = "[MdeDefenderMode]DefenderForEndpointMode";
+ ModuleName = "MdeDefenderMode";
+ Name = "ForceDefenderPassiveMode";
+ ConfigurationName = "MdeDefenderModeConfig";
+};
+instance of OMI_ConfigurationDocument
+
+                    {
+ Version="2.0.0";
+
+                        MinimumCompatibleVersion = "1.0.0";
+
+                        CompatibleVersionAdditionalProperties= {"Omi_BaseResource:ConfigurationName"};
+
+                        Author="seanstark";
+
+                        GenerationDate="08/24/2026 11:29:09";
+
+                        GenerationHost="LAPTOP-NLOC0RP2";
+
+                        Name="MdeDefenderModeConfig";
+
+                    };
